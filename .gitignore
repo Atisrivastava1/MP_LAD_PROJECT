@@ -1,0 +1,72 @@
+# ─── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.pyc
+
+# ─── Virtual Environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.env.local
+
+# ─── Environment & Secrets ────────────────────────────────────────────────────
+.env
+# Keep the example so teammates know what vars are needed
+!.env.example
+
+# ─── Database files (local SQLite) ────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+mplads_local.db
+test_mplads.db
+
+# ─── Uploads (evidence files — not for version control) ───────────────────────
+uploads/*
+!uploads/.gitkeep
+test_uploads/
+
+# ─── Pytest / Coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.lcov
+
+# ─── MyPy / Type Checkers ─────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyright/
+
+# ─── IDE & Editor ─────────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ─── VS Code (keep workspace settings, ignore user-specific) ──────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# ─── Build / Dist ─────────────────────────────────────────────────────────────
+dist/
+build/
+*.egg-info/
+*.egg
+.eggs/
+
+# ─── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+desktop.ini
