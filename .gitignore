@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+.virtual_documents/
+
+# Pytest
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+
+# Temporary files
+*.tmp
+*.log
+
+# Local datasets
+*.csv
+*.xlsx
+*.jsonl
+*.json
+
+# Local ML demo data
+ml_engine/data/
+
+# Backup files
+*_backup.py
+
+# Local project folders
+anaconda_projects/
+notebooks/
+reports/
