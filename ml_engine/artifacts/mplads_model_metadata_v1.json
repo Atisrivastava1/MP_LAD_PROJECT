@@ -1,0 +1,69 @@
+{
+  "model_name": "MPLADS_Retrospective_Project_Anomaly_Model",
+  "model_version": "1.0.0",
+  "model_type": "IsolationForest",
+  "feature_count": 7,
+  "features": [
+    "recommended_amount_log",
+    "description_length",
+    "description_word_count",
+    "has_images_flag",
+    "completion_delay_days_clean",
+    "completion_date_inconsistent",
+    "completion_delay_missing"
+  ],
+  "imputation_values": {
+    "recommended_amount_log": 12.899222326086994,
+    "description_length": 83.0,
+    "description_word_count": 13.0,
+    "has_images_flag": 0.0,
+    "completion_delay_days_clean": 325.0,
+    "completion_date_inconsistent": 0.0,
+    "completion_delay_missing": 1.0
+  },
+  "model_config": {
+    "model_type": "IsolationForest",
+    "n_estimators": 300,
+    "max_samples": "auto",
+    "contamination": "auto",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "scoring": {
+    "raw_anomaly_score": "negative of IsolationForest decision_function(X)",
+    "risk_score": "percentile rank of raw anomaly score across reference dataset",
+    "risk_score_range": "0-100",
+    "higher_score": "higher statistical anomaly",
+    "interpretation": "risk prioritization for audit review, not fraud probability"
+  },
+  "risk_thresholds": {
+    "Low": {
+      "min": 0,
+      "max": 50
+    },
+    "Medium": {
+      "min": 50,
+      "max": 75
+    },
+    "High": {
+      "min": 75,
+      "max": 90
+    },
+    "Critical": {
+      "min": 90,
+      "max": 100
+    }
+  },
+  "training_records": 83885,
+  "random_seed": 42,
+  "validation": {
+    "reproducibility_score_difference": 0.0,
+    "reproducibility_rank_correlation": 1.0,
+    "reproducibility_top5_jaccard": 1.0,
+    "multi_seed_mean_top5_jaccard": 0.8537,
+    "multi_seed_mean_score_correlation": 0.9946,
+    "common_top5_percentage": 84.15
+  },
+  "purpose": "Retrospective anomaly and audit-risk prioritization for existing MPLADS project records",
+  "warning": "The anomaly score is not a probability of fraud and does not establish fraud or wrongdoing."
+}

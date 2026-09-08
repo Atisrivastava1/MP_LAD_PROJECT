@@ -1,0 +1,12 @@
+{
+  "pythonVersion": "3.14",
+  "pythonPlatform": "Windows",
+  "include": ["."],
+  "extraPaths": ["."],
+  "reportMissingImports": "none",
+  "reportMissingModuleSource": "none",
+  "reportUndefinedVariable": "warning",
+  "reportGeneralTypeIssues": "none",
+  "reportAttributeAccessIssue": "none",
+  "typeCheckingMode": "basic"
+}
