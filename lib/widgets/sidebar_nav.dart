@@ -67,14 +67,14 @@ class SidebarNav extends StatelessWidget {
               mainAxisAlignment:
                   expanded ? MainAxisAlignment.start : MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2F6FED),
-                    borderRadius: BorderRadius.circular(10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 38,
+                    height: 38,
+                    fit: BoxFit.cover,
                   ),
-                  child: const Icon(Icons.shield_outlined, color: Colors.white, size: 22),
                 ),
                 if (expanded) ...[
                   const SizedBox(width: 10),
@@ -84,18 +84,14 @@ class SidebarNav extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'MPLADS',
+                          'MPLADS Sentinel',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
+                            fontSize: 14,
                             letterSpacing: 0.5,
                           ),
                           overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          'Sentinel',
-                          style: TextStyle(color: Colors.white54, fontSize: 11),
                         ),
                       ],
                     ),
