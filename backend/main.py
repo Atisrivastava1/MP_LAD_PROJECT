@@ -1,5 +1,5 @@
-"""
-main.py — MPLADS Sentinel FastAPI application entry point
+﻿"""
+main.py â€” MPLADS Sentinel FastAPI application entry point
 
 Run with:
     uvicorn main:app --reload
@@ -44,9 +44,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="MPLADS Sentinel API",
+    title="MPLAD Sanchalan API",
     description=(
-        "AI-Based Fraud & Anomaly Detection for MPLADS Projects — SIH Prototype.\n\n"
+        "AI-Based Fraud & Anomaly Detection for MPLADS Projects â€” SIH Prototype.\n\n"
         "**Demo credentials**\n"
         "- Data Manager: `demo_manager` / `Demo@1234`\n"
         "- Auditor: `demo_auditor` / `Demo@1234`\n\n"
@@ -56,7 +56,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# ─── CORS (open for prototype — tighten for production) ───────────────────────
+# â”€â”€â”€ CORS (open for prototype â€” tighten for production) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -65,7 +65,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Global error handlers ────────────────────────────────────────────────────
+# â”€â”€â”€ Global error handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
@@ -83,7 +83,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
     )
 
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
+# â”€â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 PREFIX = "/api/v1"
 
 app.include_router(auth_router,          prefix=PREFIX)

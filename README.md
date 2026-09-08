@@ -1,6 +1,6 @@
-﻿# MPLADS Sentinel
+﻿# MPLAD Sanchalan
 
-MPLADS Sentinel is an **SIH prototype** for detecting statistically unusual MPLADS projects and helping auditors prioritize investigations using an AI/ML engine. 
+MPLAD Sanchalan is an **SIH prototype** for detecting statistically unusual MPLADS projects and helping auditors prioritize investigations using an AI/ML engine. 
 
 **Unique Selling Proposition (USP):**
 The system detects statistical anomalies rather than declaring fraud, acting as an intelligent, bias-free prioritization tool for human auditors. It provides a seamless, end-to-end platform bridging data ingestion, machine learning inference, cloud database management, and a dedicated dashboard.
