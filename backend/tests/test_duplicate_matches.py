@@ -6,11 +6,11 @@ from tests.conftest import get_token
 
 
 def _aud_headers(client: TestClient) -> dict:
-    return {"Authorization": f"Bearer {get_token(client, 'test_auditor', 'pass123')}"}
+    return {"Authorization": f"Bearer {get_token(client, 'test_auditor', 'pass123', 'AUDITOR')}"}
 
 
 def _mgr_headers(client: TestClient) -> dict:
-    return {"Authorization": f"Bearer {get_token(client, 'test_manager', 'pass123')}"}
+    return {"Authorization": f"Bearer {get_token(client, 'test_manager', 'pass123', 'DATA_MANAGER')}"}
 
 def _get_two_project_ids(client: TestClient, mgr_headers: dict) -> tuple[str, str]:
     """Create two projects and return their project_ids."""

@@ -1,4 +1,4 @@
-"""services/dashboard_service.py — aggregate data for dashboard APIs"""
+"""services/dashboard_service.py - aggregate data for dashboard APIs"""
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -6,30 +6,29 @@ from sqlalchemy.orm import Session
 from models.project import Project
 from models.ml_prediction import MLPrediction
 from models.investigation import Investigation
+from models.user import User
 
 
-def get_summary(db: Session) -> dict:
-    total_projects = db.query(func.count(Project.project_id)).scalar() or 0
+def get_summary(db: Session, current_user: User) -> dict:
+    q_proj = db.query(Project.project_id)
+    if current_user.role == "DATA_MANAGER":
+        q_proj = q_proj.filter(Project.uploaded_by == current_user.user_id)
+    total_projects = q_proj.with_entities(func.count(Project.project_id)).scalar() or 0
 
-    risk_counts = (
-        db.query(MLPrediction.risk_level, func.count(MLPrediction.prediction_id))
-        .group_by(MLPrediction.risk_level)
-        .all()
-    )
+    q_risk = db.query(MLPrediction.risk_level, func.count(MLPrediction.prediction_id)).join(Project, Project.project_id == MLPrediction.project_id)
+    if current_user.role == "DATA_MANAGER":
+        q_risk = q_risk.filter(Project.uploaded_by == current_user.user_id)
+    risk_counts = q_risk.group_by(MLPrediction.risk_level).all()
     level_map = {r: c for r, c in risk_counts}
 
-    inv_counts = (
-        db.query(Investigation.status, func.count(Investigation.investigation_id))
-        .group_by(Investigation.status)
-        .all()
-    )
+    q_inv = db.query(Investigation.status, func.count(Investigation.investigation_id)).join(Project, Project.project_id == Investigation.project_id)
+    if current_user.role == "DATA_MANAGER":
+        q_inv = q_inv.filter(Project.uploaded_by == current_user.user_id)
+    inv_counts = q_inv.group_by(Investigation.status).all()
+
     open_statuses = {"OPEN", "UNDER_REVIEW", "IN_PROGRESS"}
-    investigations_open = sum(
-        c for s, c in inv_counts if s in open_statuses
-    )
-    investigations_closed = sum(
-        c for s, c in inv_counts if s not in open_statuses
-    )
+    investigations_open = sum(c for s, c in inv_counts if s in open_statuses)
+    investigations_closed = sum(c for s, c in inv_counts if s not in open_statuses)
 
     return {
         "total_projects": total_projects,
@@ -42,24 +41,21 @@ def get_summary(db: Session) -> dict:
     }
 
 
-def get_risk_distribution(db: Session) -> list[dict]:
-    rows = (
-        db.query(MLPrediction.risk_level, func.count(MLPrediction.prediction_id))
-        .group_by(MLPrediction.risk_level)
-        .all()
-    )
+def get_risk_distribution(db: Session, current_user: User) -> list[dict]:
+    q_risk = db.query(MLPrediction.risk_level, func.count(MLPrediction.prediction_id)).join(Project, Project.project_id == MLPrediction.project_id)
+    if current_user.role == "DATA_MANAGER":
+        q_risk = q_risk.filter(Project.uploaded_by == current_user.user_id)
+    rows = q_risk.group_by(MLPrediction.risk_level).all()
     return [{"risk_level": r, "count": c} for r, c in rows]
 
 
-def get_high_risk_projects(db: Session, limit: int = 50) -> list[dict]:
-    rows = (
-        db.query(Project, MLPrediction)
-        .join(MLPrediction, MLPrediction.project_id == Project.project_id)
-        .filter(MLPrediction.risk_level.in_(["High", "Critical"]))
-        .order_by(MLPrediction.risk_score.desc())
-        .limit(limit)
-        .all()
-    )
+def get_high_risk_projects(db: Session, current_user: User, limit: int = 50) -> list[dict]:
+    q_proj = db.query(Project, MLPrediction).join(MLPrediction, MLPrediction.project_id == Project.project_id).filter(MLPrediction.risk_level.in_(["High", "Critical"]))
+    if current_user.role == "DATA_MANAGER":
+        q_proj = q_proj.filter(Project.uploaded_by == current_user.user_id)
+        
+    rows = q_proj.order_by(MLPrediction.risk_score.desc()).limit(limit).all()
+    
     result = []
     for project, pred in rows:
         result.append({

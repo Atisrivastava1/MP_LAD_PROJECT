@@ -1,4 +1,4 @@
-﻿"""schemas/auth.py - Login request, token response, current-user output"""
+"""schemas/auth.py - Login request, token response, current-user output"""
 
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
@@ -7,6 +7,16 @@ from pydantic import BaseModel, EmailStr
 class LoginRequest(BaseModel):
     username: str
     password: str
+    role: str
+
+
+class SignupRequest(BaseModel):
+    name: str
+    username: str
+    email: EmailStr
+    password: str
+    role: str
+    department: str
 
 
 class TokenResponse(BaseModel):
@@ -21,10 +31,11 @@ class UserOut(BaseModel):
     user_id: str
     name: str
     username: str
+    email: str
     role: str
     department: str | None
-    email: str
     is_active: bool
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    class Config:
+        from_attributes = True

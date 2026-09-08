@@ -14,13 +14,13 @@ def test_login_valid_auditor(client: TestClient, auditor_token: str):
 
 
 def test_login_invalid_password(client: TestClient):
-    resp = client.post("/api/v1/auth/login", json={"username": "test_manager", "password": "WRONG"})
+    resp = client.post("/api/v1/auth/login", json={"username": "test_manager", "password": "WRONG", "role": "DATA_MANAGER"})
     assert resp.status_code == 401
     assert "Invalid" in resp.json()["error"]
 
 
 def test_login_unknown_user(client: TestClient):
-    resp = client.post("/api/v1/auth/login", json={"username": "nobody", "password": "x"})
+    resp = client.post("/api/v1/auth/login", json={"username": "nobody", "password": "x", "role": "DATA_MANAGER"})
     assert resp.status_code == 401
 
 

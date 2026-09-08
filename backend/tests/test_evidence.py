@@ -7,11 +7,11 @@ from tests.conftest import get_token
 
 
 def _aud_headers(client: TestClient) -> dict:
-    return {"Authorization": f"Bearer {get_token(client, 'test_auditor', 'pass123')}"}
+    return {"Authorization": f"Bearer {get_token(client, 'test_auditor', 'pass123', 'AUDITOR')}"}
 
 
 def _mgr_headers(client: TestClient) -> dict:
-    return {"Authorization": f"Bearer {get_token(client, 'test_manager', 'pass123')}"}
+    return {"Authorization": f"Bearer {get_token(client, 'test_manager', 'pass123', 'DATA_MANAGER')}"}
 
 def _setup_investigation(client: TestClient) -> str:
     mgr = _mgr_headers(client)

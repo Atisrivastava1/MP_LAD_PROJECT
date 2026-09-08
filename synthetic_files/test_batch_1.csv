@@ -1,0 +1,5 @@
+work_id,mp_name,state,constituency,description,recommended_amount,has_images,completion_date,completion_delay_days,completion_date_inconsistent,completion_delay_missing,project_status,update_validity_days
+W-1001,John Doe,MH,Pune,Constructed water tank,500000,true,2023-01-15,0,false,false,COMPLETED,30
+W-1002,Jane Smith,KA,Bangalore,Road repair,1500000,true,2023-05-20,10,false,false,COMPLETED,30
+W-1003,Amit Kumar,UP,Lucknow,Solar panels for school,800000,true,,0,false,true,IN_PROGRESS,30
+W-1004,Priya Raj,TN,Chennai,Library construction,1200000,true,,0,false,true,SUBMITTED,30

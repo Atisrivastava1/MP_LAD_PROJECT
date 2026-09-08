@@ -59,7 +59,7 @@ def list_projects(
     db: Session = Depends(get_db),
     _: User = Depends(any_authenticated),
 ):
-    return get_all_projects(db, skip=skip, limit=limit)
+    return get_all_projects(db, skip=skip, limit=limit, current_user=_)
 
 
 @router.get("/{work_id}", response_model=ProjectOut, summary="Get project by work_id")

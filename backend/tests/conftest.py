@@ -110,17 +110,17 @@ def db():
 
 # ─── Token fixtures ───────────────────────────────────────────────────────────
 
-def get_token(client: TestClient, username: str, password: str) -> str:
-    resp = client.post("/api/v1/auth/login", json={"username": username, "password": password})
+def get_token(client: TestClient, username: str, password: str, role: str) -> str:
+    resp = client.post("/api/v1/auth/login", json={"username": username, "password": password, "role": role})
     assert resp.status_code == 200, f"Login failed for {username}: {resp.json()}"
     return resp.json()["access_token"]
 
 
 @pytest.fixture
 def manager_token(client):
-    return get_token(client, "test_manager", "pass123")
+    return get_token(client, "test_manager", "pass123", "DATA_MANAGER")
 
 
 @pytest.fixture
 def auditor_token(client):
-    return get_token(client, "test_auditor", "pass123")
+    return get_token(client, "test_auditor", "pass123", "AUDITOR")

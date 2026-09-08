@@ -48,6 +48,7 @@ def create_project(
     
     project.next_update_due = _calculate_next_update_due(project.project_status, data.update_validity_days)
 
+    project.uploaded_by = user_id
     db.add(project)
     db.commit()
     db.refresh(project)
@@ -102,8 +103,11 @@ def get_project_by_work_id(db: Session, work_id: str) -> Project:
     return project
 
 
-def get_all_projects(db: Session, skip: int = 0, limit: int = 100) -> list[Project]:
-    return db.query(Project).offset(skip).limit(limit).all()
+def get_all_projects(db: Session, skip: int = 0, limit: int = 100, current_user: User | None = None) -> list[Project]:
+    q = db.query(Project)
+    if current_user and current_user.role == "DATA_MANAGER":
+        q = q.filter(Project.uploaded_by == current_user.user_id)
+    return q.offset(skip).limit(limit).all()
 
 
 def get_project_history(db: Session, work_id: str) -> list[ProjectHistory]:
@@ -154,6 +158,7 @@ def process_csv_upload(
                 existing.completion_date_inconsistent = _safe_bool(row, "completion_date_inconsistent") if pd.notna(row.get("completion_date_inconsistent")) else existing.completion_date_inconsistent
                 existing.completion_delay_missing = _safe_bool(row, "completion_delay_missing") if pd.notna(row.get("completion_delay_missing")) else existing.completion_delay_missing
                 existing.project_status = status_val
+                existing.uploaded_by = user_id
                 
                 if validity_days is not None:
                     existing.next_update_due = _calculate_next_update_due(status_val, validity_days)

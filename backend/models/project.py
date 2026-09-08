@@ -31,6 +31,7 @@ class Project(Base):
     completion_date_inconsistent: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     completion_delay_missing: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     project_status: Mapped[str] = mapped_column(String(50), default="SUBMITTED")
+    uploaded_by: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.user_id"), nullable=True)
     next_update_due: Mapped[date | None] = mapped_column(Date, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
     updated_at: Mapped[datetime] = mapped_column(
