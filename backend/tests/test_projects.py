@@ -1,4 +1,4 @@
-"""tests/test_projects.py"""
+﻿"""tests/test_projects.py"""
 
 import io
 import pytest
@@ -81,14 +81,14 @@ def test_csv_upload_valid(client: TestClient, manager_token: str):
     assert data["created"] == 2
 
 
-def test_csv_upload_duplicate_skipped(client: TestClient, manager_token: str):
+def test_csv_upload_duplicate_upserted(client: TestClient, manager_token: str):
     headers = {"Authorization": f"Bearer {manager_token}"}
     csv_content = "work_id\nCSV-001\n"   # CSV-001 already exists
     files = {"file": ("dup.csv", io.BytesIO(csv_content.encode()), "text/csv")}
     resp = client.post("/api/v1/projects/upload", files=files, headers=headers)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["skipped"] == 1
+    assert data["updated"] == 1
 
 
 def test_csv_upload_missing_column(client: TestClient, manager_token: str):

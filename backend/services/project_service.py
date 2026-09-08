@@ -52,13 +52,13 @@ def create_project(
     db.commit()
     db.refresh(project)
 
-    log_action(db, "PROJECT_CREATED", user_id, project.project_id, f"work_id={project.work_id}", "SUCCESS")
+    log_action(db, action="PROJECT_CREATED", user_id=user_id, project_id=project.project_id, new_value=f"work_id={project.work_id}", status="SUCCESS")
 
     try:
-        run_and_store_prediction(db, project.project_id, project_data, user_id)
+        run_and_store_prediction(db, project_id=project.project_id, project_data=project_data, user_id=user_id)
     except Exception as exc:
         logger.error("ML inference failed: %s", exc)
-        log_action(db, "PREDICTION_FAILED", user_id, project.project_id, str(exc), "ERROR")
+        log_action(db, action="PREDICTION_FAILED", user_id=user_id, project_id=project.project_id, new_value=str(exc), status="ERROR")
 
     return project
 
@@ -84,12 +84,11 @@ def update_project_single(
     db.commit()
     db.refresh(project)
 
-    log_action(db, "PROJECT_UPDATED", user_id, project.project_id, f"work_id={work_id}", "SUCCESS")
+    log_action(db, action="PROJECT_UPDATED", user_id=user_id, project_id=project.project_id, new_value=f"work_id={work_id}", status="SUCCESS")
 
-    # Run ML inference on the newly updated row data
     project_dict = {c.name: getattr(project, c.name) for c in project.__table__.columns}
     try:
-        run_and_store_prediction(db, project.project_id, project_dict, user_id)
+        run_and_store_prediction(db, project_id=project.project_id, project_data=project_dict, user_id=user_id)
     except Exception as exc:
         logger.error("ML inference failed: %s", exc)
 
@@ -144,7 +143,6 @@ def process_csv_upload(
             try:
                 _snapshot_history(db, existing)
                 
-                # Update existing fields
                 existing.mp_name = _safe_str(row, "mp_name") or existing.mp_name
                 existing.state = _safe_str(row, "state") or existing.state
                 existing.constituency = _safe_str(row, "constituency") or existing.constituency
@@ -165,9 +163,8 @@ def process_csv_upload(
                 db.commit()
                 db.refresh(existing)
                 
-                # Rerun ML Prediction
                 project_dict = {c.name: getattr(existing, c.name) for c in existing.__table__.columns}
-                run_and_store_prediction(db, existing.project_id, project_dict, user_id)
+                run_and_store_prediction(db, project_id=existing.project_id, project_data=project_dict, user_id=user_id)
 
                 updated += 1
                 results.append(CSVRowResult(work_id=work_id, status="updated"))
@@ -177,7 +174,6 @@ def process_csv_upload(
                 results.append(CSVRowResult(work_id=work_id, status="error", reason=str(exc)))
             continue
 
-        # If it doesn't exist, Create it
         try:
             data = ProjectCreate(
                 work_id=work_id,
@@ -204,7 +200,7 @@ def process_csv_upload(
             errors += 1
             results.append(CSVRowResult(work_id=work_id, status="error", reason=str(exc)))
 
-    log_action(db, "CSV_UPLOAD", user_id, None, f"created={created}, updated={updated}, errors={errors}", "SUCCESS")
+    log_action(db, action="CSV_UPLOAD", user_id=user_id, new_value=f"created={created}, updated={updated}, errors={errors}", status="SUCCESS")
 
     return CSVUploadResult(total_rows=len(df), created=created, updated=updated, skipped=skipped, errors=errors, results=results)
 
