@@ -1,4 +1,4 @@
-"""routes/project_routes.py"""
+﻿"""routes/project_routes.py"""
 
 from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
@@ -6,11 +6,13 @@ from sqlalchemy.orm import Session
 from database.connection import get_db
 from auth.rbac import any_authenticated, data_manager_only
 from models.user import User
-from schemas.project import ProjectCreate, ProjectOut, CSVUploadResult
+from schemas.project import ProjectCreate, ProjectUpdate, ProjectOut, ProjectHistoryOut, CSVUploadResult
 from services.project_service import (
     create_project,
+    update_project_single,
     get_project_by_work_id,
     get_all_projects,
+    get_project_history,
     process_csv_upload,
 )
 
@@ -26,10 +28,20 @@ def add_project(
     return create_project(db, data, user_id=current_user.user_id)
 
 
+@router.put("/{work_id}", response_model=ProjectOut, summary="Update a single project")
+def update_project(
+    work_id: str,
+    data: ProjectUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(data_manager_only),
+):
+    return update_project_single(db, work_id, data, user_id=current_user.user_id)
+
+
 @router.post(
     "/upload",
     response_model=CSVUploadResult,
-    summary="Upload projects via CSV (Data Manager only)",
+    summary="Upload/Update projects via CSV (Data Manager only)",
 )
 async def upload_csv(
     file: UploadFile = File(..., description="CSV file containing project data"),
@@ -57,3 +69,13 @@ def get_project(
     _: User = Depends(any_authenticated),
 ):
     return get_project_by_work_id(db, work_id)
+
+
+@router.get("/{work_id}/history", response_model=list[ProjectHistoryOut], summary="Get project history timeline")
+def get_history(
+    work_id: str,
+    db: Session = Depends(get_db),
+    _: User = Depends(any_authenticated),
+):
+    return get_project_history(db, work_id)
+

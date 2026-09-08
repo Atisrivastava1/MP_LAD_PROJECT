@@ -1,7 +1,8 @@
-"""schemas/project.py — Project create/out + CSV upload result"""
+﻿"""schemas/project.py - Project create/out + CSV upload result + History"""
 
-from datetime import datetime
+from datetime import datetime, date
 from pydantic import BaseModel
+from typing import Optional
 
 
 class ProjectCreate(BaseModel):
@@ -17,6 +18,15 @@ class ProjectCreate(BaseModel):
     completion_date_inconsistent: bool | None = None
     completion_delay_missing: bool | None = None
     project_status: str = "SUBMITTED"
+    update_validity_days: int | None = None
+
+
+class ProjectUpdate(BaseModel):
+    project_status: str | None = None
+    completion_delay_days: int | None = None
+    recommended_amount: float | None = None
+    update_validity_days: int | None = None
+    # Add more fields if needed for single-project updates
 
 
 class ProjectOut(BaseModel):
@@ -33,21 +43,35 @@ class ProjectOut(BaseModel):
     completion_date_inconsistent: bool | None
     completion_delay_missing: bool | None
     project_status: str
+    next_update_due: date | None
     created_at: datetime
     updated_at: datetime
 
     model_config = {"from_attributes": True}
 
 
+class ProjectHistoryOut(BaseModel):
+    history_id: str
+    project_id: str
+    snapshot_date: datetime
+    completion_delay_days: int | None
+    recommended_amount: float | None
+    project_status: str
+    next_update_due: date | None
+
+    model_config = {"from_attributes": True}
+
+
 class CSVRowResult(BaseModel):
     work_id: str
-    status: str            # "created" | "skipped" | "error"
+    status: str            # "created" | "updated" | "skipped" | "error"
     reason: str | None = None
 
 
 class CSVUploadResult(BaseModel):
     total_rows: int
     created: int
+    updated: int
     skipped: int
     errors: int
     results: list[CSVRowResult]
