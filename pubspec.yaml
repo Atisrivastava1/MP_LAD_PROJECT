@@ -1,0 +1,37 @@
+# pubspec.yaml
+
+name: mplads_sentinel
+description: MPLADS Sentinel - AI-based fraud and anomaly detection
+publish_to: "none"
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # API communication
+  http: ^1.6.0
+
+  # Secure JWT/token storage
+  flutter_secure_storage: ^11.0.0
+
+  # File/document upload
+  file_picker: ^12.2.0
+
+  # Icons
+  cupertino_icons: ^1.0.8
+  fl_chart: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
