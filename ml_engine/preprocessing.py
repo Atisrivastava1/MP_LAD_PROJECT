@@ -64,23 +64,15 @@ def _safe_text(value):
 # ============================================================
 # FEATURE BUILDER
 # ============================================================
-
 def build_features(project_data):
-    """
-    Convert one raw MPLADS project into the
-    exact 7 production model features.
-
-    Returns:
-        pandas.DataFrame with exactly 7 columns
-        in frozen production order.
-    """
-
     # --------------------------------------------------------
     # Recommended amount
     # --------------------------------------------------------
-
     amount = _safe_float(
-        project_data.get("Recommended Amount (₹)")
+        project_data.get(
+            "Recommended Amount (₹)",
+            project_data.get("recommended_amount", np.nan)
+        )
     )
 
     if pd.isna(amount) or amount < 0:
@@ -88,88 +80,141 @@ def build_features(project_data):
     else:
         recommended_amount_log = math.log1p(amount)
 
-
     # --------------------------------------------------------
-    # Description
+    # Work description
+    # Accept both application/API and ML-test naming
     # --------------------------------------------------------
-
     description = _safe_text(
-        project_data.get("Description", "")
+        project_data.get(
+            "Work Description",
+            project_data.get(
+                "Description",
+                project_data.get("description", "")
+            )
+        )
     )
 
     description_length = len(description)
-
-    description_word_count = len(
-        description.split()
-    )
-
+    description_word_count = len(description.split())
 
     # --------------------------------------------------------
     # Images
     # --------------------------------------------------------
-
     has_images = project_data.get(
-        "has_images_flag",
-        project_data.get("Has Images", 0)
-    )
-
-    try:
-        has_images_flag = float(has_images)
-    except (TypeError, ValueError):
-        has_images_flag = np.nan
-
-
-    # --------------------------------------------------------
-    # Completion information
-    # --------------------------------------------------------
-
-    completion_delay = _safe_float(
+        "Has Images",
         project_data.get(
-            "completion_delay_days_clean"
+            "has_images_flag",
+            project_data.get("has_images", 0)
         )
     )
 
-    completion_missing = project_data.get(
-        "completion_delay_missing"
-    )
-
-    if completion_missing is None:
-
-        completion_delay_missing = (
-            1.0 if pd.isna(completion_delay) else 0.0
+    if isinstance(has_images, str):
+        has_images_flag = (
+            1.0
+            if has_images.strip().lower()
+            in {"true", "1", "yes", "y"}
+            else 0.0
         )
-
     else:
+        try:
+            has_images_flag = float(bool(has_images))
+        except (TypeError, ValueError):
+            has_images_flag = np.nan
 
+    # --------------------------------------------------------
+    # Completion dates
+    # Derive completion features from normal MPLADS fields
+    # --------------------------------------------------------
+    recommendation_date = pd.to_datetime(
+        project_data.get(
+            "Recommendation Date",
+            project_data.get("recommendation_date", pd.NaT)
+        ),
+        errors="coerce"
+    )
+
+    completed_date = pd.to_datetime(
+        project_data.get(
+            "Completed Date",
+            project_data.get("completed_date", pd.NaT)
+        ),
+        errors="coerce"
+    )
+
+    # Explicit derived value is accepted if supplied
+    supplied_delay = _safe_float(
+        project_data.get(
+            "completion_delay_days_clean",
+            np.nan
+        )
+    )
+
+    if not pd.isna(supplied_delay):
+        completion_delay_days_clean = (
+            supplied_delay if supplied_delay >= 0 else np.nan
+        )
+    elif (
+        not pd.isna(recommendation_date)
+        and not pd.isna(completed_date)
+    ):
+        delay = (
+            completed_date - recommendation_date
+        ).days
+
+        completion_delay_days_clean = (
+            float(delay) if delay >= 0 else np.nan
+        )
+    else:
+        completion_delay_days_clean = np.nan
+
+    # --------------------------------------------------------
+    # Date inconsistency
+    # --------------------------------------------------------
+    supplied_inconsistent = project_data.get(
+        "completion_date_inconsistent",
+        None
+    )
+
+    if supplied_inconsistent is not None:
+        try:
+            completion_date_inconsistent = float(
+                supplied_inconsistent
+            )
+        except (TypeError, ValueError):
+            completion_date_inconsistent = 0.0
+    elif (
+        not pd.isna(recommendation_date)
+        and not pd.isna(completed_date)
+    ):
+        completion_date_inconsistent = float(
+            completed_date < recommendation_date
+        )
+    else:
+        completion_date_inconsistent = 0.0
+
+    # --------------------------------------------------------
+    # Completion missing
+    # --------------------------------------------------------
+    supplied_missing = project_data.get(
+        "completion_delay_missing",
+        None
+    )
+
+    if supplied_missing is not None:
         try:
             completion_delay_missing = float(
-                completion_missing
+                supplied_missing
             )
         except (TypeError, ValueError):
             completion_delay_missing = 1.0
-
-
-    # --------------------------------------------------------
-    # Completion date inconsistency
-    # --------------------------------------------------------
-
-    completion_inconsistent = project_data.get(
-        "completion_date_inconsistent",
-        0
-    )
-
-    try:
-        completion_date_inconsistent = float(
-            completion_inconsistent
+    else:
+        completion_delay_missing = float(
+            pd.isna(completion_delay_days_clean)
         )
-    except (TypeError, ValueError):
-        completion_date_inconsistent = np.nan
-
 
     # --------------------------------------------------------
-    # Create feature row
+    # Exact frozen 7-feature schema
     # --------------------------------------------------------
-
     row = {
         "recommended_amount_log":
             recommended_amount_log,
@@ -184,7 +229,7 @@ def build_features(project_data):
             has_images_flag,
 
         "completion_delay_days_clean":
-            completion_delay,
+            completion_delay_days_clean,
 
         "completion_date_inconsistent":
             completion_date_inconsistent,
@@ -193,16 +238,10 @@ def build_features(project_data):
             completion_delay_missing,
     }
 
-
     X = pd.DataFrame([row])
 
-
-    # --------------------------------------------------------
-    # Apply frozen production medians
-    # --------------------------------------------------------
-
+    # Exact frozen feature order + frozen training medians
     for feature in FEATURES:
-
         X[feature] = pd.to_numeric(
             X[feature],
             errors="coerce"
@@ -211,14 +250,6 @@ def build_features(project_data):
         X[feature] = X[feature].fillna(
             IMPUTATION_VALUES[feature]
         )
-
-
-
-    # --------------------------------------------------------
-    # Final order
-    # --------------------------------------------------------
-
-    X = X[FEATURES]
 
     return X
 
