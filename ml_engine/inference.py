@@ -5,6 +5,7 @@ Production Inference Module
 
 from pathlib import Path
 import json
+from ml_engine.preprocessing import prepare_features
 
 import joblib
 import numpy as np
@@ -497,35 +498,25 @@ def generate_why_flagged(
 
 def predict_project(project_data):
 
-    # Build exact 7 features
-    raw_features = build_production_features(
+    # Build exact frozen 7 features
+    raw_features = prepare_features(
         project_data
     )
 
-
-    # Frozen preprocessing
-    X = apply_imputation(
-        raw_features
-    )
-
-
     # ML anomaly score
     raw_score = calculate_raw_anomaly_score(
-        X
+        raw_features
     )[0]
-
 
     # Percentile risk score
     risk_score = calculate_risk_score(
         raw_score
     )
 
-
     # Risk level
     risk_level = determine_risk_level(
         risk_score
     )
-
 
     # Explanation
     why_flagged = generate_why_flagged(
@@ -533,7 +524,6 @@ def predict_project(project_data):
         risk_score,
         risk_level
     )
-
 
     return {
 
@@ -552,7 +542,10 @@ def predict_project(project_data):
         "work_id":
             project_data.get(
                 "Work ID",
-                None
+                project_data.get(
+                    "work_id",
+                    None
+                )
             ),
 
         "raw_anomaly_score":
@@ -572,12 +565,11 @@ def predict_project(project_data):
 
         "features": {
             column: float(
-                X.iloc[0][column]
+                raw_features.iloc[0][column]
             )
             for column in FEATURES
         }
     }
-
 
 # ============================================================
 # 12. MODEL INFORMATION
