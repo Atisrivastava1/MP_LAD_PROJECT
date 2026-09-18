@@ -1,160 +1,12 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
 import '../../widgets/app_shell.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Static Placeholder Data
 // Replace with ApiService calls once backend is ready.
 // ─────────────────────────────────────────────────────────────────────────────
-const List<_RiskProject> _mockProjects = [
-  _RiskProject(
-    workId: '175556',
-    mpName: 'Shri Rajesh Gupta',
-    state: 'Madhya Pradesh',
-    district: 'Indore',
-    description: 'Construction of community hall near village panchayat building, MP.',
-    recommendedAmount: 2450000,
-    completionDate: '15 Mar 2024',
-    hasImages: true,
-    riskScore: 91,
-    anomalyFlag: true,
-    isDuplicate: false,
-    riskReasons: [
-      'Critical statistical anomaly — Isolation Forest detected unusual cost pattern',
-      'Completion delay of 240 days relative to project type baseline',
-      'Description length too short (18 words vs. 35-word baseline)',
-      'Amount ₹24.5L exceeds district median by 3.1 standard deviations',
-    ],
-    mlFeatures: {
-      'description_length': '18',
-      'completion_delay_missing': '1',
-      'recommended_amount': '2450000',
-      'has_images': '1',
-      'mp_name_frequency': '0.67',
-      'district_frequency': '0.42',
-      'work_type_avg_amount': '1100000',
-    },
-    modelVersion: '1.0.0',
-    rawAnomalyScore: 0.91,
-    duplicateWorkIds: ['172001', '170889'],
-    status: 'Flagged',
-  ),
-  _RiskProject(
-    workId: '172001',
-    mpName: 'Smt. Kavita Sharma',
-    state: 'Uttar Pradesh',
-    district: 'Lucknow',
-    description: 'Laying of road from village Saraiyan to NH-27 junction.',
-    recommendedAmount: 1850000,
-    completionDate: '10 Jan 2024',
-    hasImages: false,
-    riskScore: 78,
-    anomalyFlag: true,
-    isDuplicate: true,
-    riskReasons: [
-      'Duplicate detected — similar project found in Work IDs 175556, 170889',
-      'No images uploaded; reduces verification confidence',
-      'Amount ₹18.5L is 2.4× above district road-type median',
-    ],
-    mlFeatures: {
-      'description_length': '24',
-      'completion_delay_missing': '0',
-      'recommended_amount': '1850000',
-      'has_images': '0',
-      'mp_name_frequency': '0.55',
-      'district_frequency': '0.39',
-      'work_type_avg_amount': '770000',
-    },
-    modelVersion: '1.0.0',
-    rawAnomalyScore: 0.78,
-    duplicateWorkIds: ['175556', '170889'],
-    status: 'Duplicate',
-  ),
-  _RiskProject(
-    workId: '177320',
-    mpName: 'Shri Mohan Das',
-    state: 'Rajasthan',
-    district: 'Jaipur',
-    description: 'Installation of solar street lights in Gram Panchayat Kalyanpura.',
-    recommendedAmount: 980000,
-    completionDate: '',
-    hasImages: true,
-    riskScore: 84,
-    anomalyFlag: true,
-    isDuplicate: false,
-    riskReasons: [
-      'Completion date missing — cannot verify project closure',
-      'Work description is generic; matches 12 other projects verbatim',
-      'Amount ₹9.8L above expected range for solar installation in Jaipur',
-    ],
-    mlFeatures: {
-      'description_length': '11',
-      'completion_delay_missing': '1',
-      'recommended_amount': '980000',
-      'has_images': '1',
-      'mp_name_frequency': '0.78',
-      'district_frequency': '0.51',
-      'work_type_avg_amount': '620000',
-    },
-    modelVersion: '1.0.0',
-    rawAnomalyScore: 0.84,
-    duplicateWorkIds: [],
-    status: 'Flagged',
-  ),
-  _RiskProject(
-    workId: '168934',
-    mpName: 'Shri Anil Patel',
-    state: 'Gujarat',
-    district: 'Surat',
-    description: 'Construction of approach road to primary health centre, Kadodara village.',
-    recommendedAmount: 750000,
-    completionDate: '22 Aug 2023',
-    hasImages: true,
-    riskScore: 18,
-    anomalyFlag: false,
-    isDuplicate: false,
-    riskReasons: [],
-    mlFeatures: {
-      'description_length': '47',
-      'completion_delay_missing': '0',
-      'recommended_amount': '750000',
-      'has_images': '1',
-      'mp_name_frequency': '0.32',
-      'district_frequency': '0.28',
-      'work_type_avg_amount': '720000',
-    },
-    modelVersion: '1.0.0',
-    rawAnomalyScore: 0.18,
-    duplicateWorkIds: [],
-    status: 'Clean',
-  ),
-  _RiskProject(
-    workId: '163210',
-    mpName: 'Smt. Sonia Verma',
-    state: 'Bihar',
-    district: 'Patna',
-    description: 'Development of Anganwadi centre building — Phase 3, Muzaffarpur block.',
-    recommendedAmount: 1200000,
-    completionDate: '30 Jun 2023',
-    hasImages: true,
-    riskScore: 22,
-    anomalyFlag: false,
-    isDuplicate: false,
-    riskReasons: [],
-    mlFeatures: {
-      'description_length': '38',
-      'completion_delay_missing': '0',
-      'recommended_amount': '1200000',
-      'has_images': '1',
-      'mp_name_frequency': '0.41',
-      'district_frequency': '0.37',
-      'work_type_avg_amount': '1150000',
-    },
-    modelVersion: '1.0.0',
-    rawAnomalyScore: 0.22,
-    duplicateWorkIds: [],
-    status: 'Clean',
-  ),
-];
+List<_RiskProject> _mockProjects = [];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main Screen
@@ -168,6 +20,40 @@ class RiskProjectListScreen extends StatefulWidget {
 }
 
 class _RiskProjectListScreenState extends State<RiskProjectListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _loadProjects();
+  }
+
+  Future<void> _loadProjects() async {
+    final rawList = await ApiService.fetchRiskProjects();
+    final projects = rawList.map((m) => _RiskProject(
+      workId: m['work_id']?.toString() ?? '',
+      mpName: m['mp_name']?.toString() ?? 'Unknown',
+      state: m['state']?.toString() ?? 'Unknown',
+      district: m['district']?.toString() ?? 'Unknown',
+      description: m['description']?.toString() ?? '',
+      recommendedAmount: (m['recommendedAmount'] as num?)?.toDouble() ?? 0.0,
+      completionDate: m['completionDate']?.toString() ?? 'N/A',
+      hasImages: m['hasImages'] == true,
+      riskScore: (m['risk_score'] as num?)?.toInt() ?? 0,
+      anomalyFlag: m['anomalyFlag'] == true,
+      isDuplicate: m['isDuplicate'] == true,
+      riskReasons: [(m['why_flagged']?.toString() ?? 'Anomaly detected')],
+      mlFeatures: const {},
+      modelVersion: '1.0',
+      rawAnomalyScore: (m['risk_score'] as num?)?.toDouble() ?? 0.0,
+      duplicateWorkIds: const [],
+      status: m['risk_level']?.toString() ?? 'Flagged',
+    )).toList();
+    if (mounted) {
+      setState(() {
+        _mockProjects = projects;
+      });
+    }
+  }
+
   int? _selectedIndex;
   String _riskFilter = 'All';
   String _searchQuery = '';

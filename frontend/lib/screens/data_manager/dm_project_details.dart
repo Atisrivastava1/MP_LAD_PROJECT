@@ -19,7 +19,7 @@ class DmProjectDetailsScreen extends StatelessWidget {
             const Text('Project Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF0B1F3A))),
           if (isEmbedded) const SizedBox(height: 24),
 
-          Container(
+                    Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
@@ -29,19 +29,35 @@ class DmProjectDetailsScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const Text('Project Information', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2F6FED))),
+                const SizedBox(height: 16),
                 _buildDetailRow('Work ID', project.id),
                 const Divider(height: 24),
-                _buildDetailRow('Project Name', project.name),
+                _buildDetailRow('MP Name', project.mpName ?? 'Unknown'),
                 const Divider(height: 24),
-                _buildDetailRow('Location', project.location),
+                _buildDetailRow('State', project.state),
                 const Divider(height: 24),
+                _buildDetailRow('District', project.district),
+                const Divider(height: 24),
+                _buildDetailRow('Description', project.description),
+                
+                const SizedBox(height: 32),
+                
+                const Text('Financial & Timeline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2F6FED))),
+                const SizedBox(height: 16),
+                _buildDetailRow('Recommended Amount', '₹'),
+                const Divider(height: 24),
+                _buildDetailRow('Completion Date', project.endDate?.toString().split(' ')[0] ?? 'N/A'),
+                const Divider(height: 24),
+                _buildDetailRow('Has Images', project.hasImages == true ? 'Yes ✓' : 'No'),
+                
+                const SizedBox(height: 32),
+                
+                const Text('Analytics & Status', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2F6FED))),
+                const SizedBox(height: 16),
                 _buildDetailRow('Status', project.status),
                 const Divider(height: 24),
-                _buildDetailRow('Estimated Cost', '₹${project.estimatedCost}'),
-                const Divider(height: 24),
-                _buildDetailRow('Start Date', project.startDate.toString().split(' ')[0]),
-                const Divider(height: 24),
-                _buildDetailRow('Risk Score', '${project.riskScore}/100'),
+                _buildDetailRow('Risk Score', '/100'),
                 const Divider(height: 24),
                 _buildDetailRow('Last Updated', project.lastUpdated),
               ],

@@ -4,14 +4,16 @@ import 'import_progress.dart';
 class ProjectDataValidationScreen extends StatefulWidget {
   final String fileName;
   final int validityDays;
+  final Map<String, dynamic> uploadResult;
   final bool isEmbedded;
-  final VoidCallback? onValidationComplete;
+  final Function(List<String>)? onValidationComplete;
   final VoidCallback? onBack;
 
   const ProjectDataValidationScreen({
     super.key,
     required this.fileName,
     required this.validityDays,
+    required this.uploadResult,
     this.isEmbedded = false,
     this.onValidationComplete,
     this.onBack,
@@ -24,15 +26,10 @@ class ProjectDataValidationScreen extends StatefulWidget {
 class _ProjectDataValidationScreenState extends State<ProjectDataValidationScreen> {
   bool _isSubmitting = false;
 
-  final List<Map<String, String>> _previewRows = const [
-    {'id': 'PRJ-20001', 'name': 'Community Hall', 'amount': '25,00,000', 'status': 'Passed'},
-    {'id': 'PRJ-20002', 'name': 'Drainage', 'amount': '18,00,000', 'status': 'Passed'},
-    {'id': 'PRJ-20003', 'name': 'Road Repair', 'amount': '6,00,000', 'status': 'Passed'},
-    {'id': 'PRJ-20004', 'name': '', 'amount': '12,00,000', 'status': 'Failed (Missing Name)'},
-  ];
-
-  int get _errorCount => _previewRows.where((r) => r['status']!.startsWith('Failed')).length;
-  int get _validCount => _previewRows.length - _errorCount;
+  List<dynamic> get _results => widget.uploadResult['results'] ?? [];
+  int get _errorCount => widget.uploadResult['errors'] ?? 0;
+  int get _validCount => (widget.uploadResult['created'] ?? 0) + (widget.uploadResult['updated'] ?? 0);
+  int get _totalRows => widget.uploadResult['total_rows'] ?? 0;
 
   Future<void> _startImport() async {
     setState(() => _isSubmitting = true);
@@ -42,11 +39,19 @@ class _ProjectDataValidationScreenState extends State<ProjectDataValidationScree
 
     if (!mounted) return;
 
+    final List<String> workIds = _results
+        .where((r) => r['status'] == 'created' || r['status'] == 'updated')
+        .map((r) => r['work_id'] as String)
+        .toList();
+        
     if (widget.isEmbedded && widget.onValidationComplete != null) {
-      widget.onValidationComplete!();
+      widget.onValidationComplete!(workIds);
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => ImportProgressScreen(fileName: widget.fileName)),
+        MaterialPageRoute(builder: (_) => ImportProgressScreen(
+          fileName: widget.fileName,
+          workIds: workIds,
+        )),
       );
     }
   }
@@ -60,7 +65,7 @@ class _ProjectDataValidationScreenState extends State<ProjectDataValidationScree
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildStatColumn('Total Rows', _previewRows.length.toString(), Colors.blue),
+            _buildStatColumn('Total Rows', _totalRows.toString(), Colors.blue),
             _buildStatColumn('Valid', _validCount.toString(), Colors.green),
             _buildStatColumn('Invalid', _errorCount.toString(), Colors.red),
           ],
@@ -72,11 +77,14 @@ class _ProjectDataValidationScreenState extends State<ProjectDataValidationScree
         // List of Rows
         Expanded(
           child: ListView.separated(
-            itemCount: _previewRows.length,
+            itemCount: _results.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final row = _previewRows[index];
-              final hasError = row['status']!.startsWith('Failed');
+              final row = _results[index];
+              final hasError = row['status'] == 'error';
+              final statusText = hasError ? 'Failed: ${row['reason'] ?? 'Unknown'}' : 'Passed (${row['status']})';
+              final description = row['description']?.toString() ?? '(missing)';
+              final amount = row['recommended_amount'] != null ? '₹${row['recommended_amount']}' : 'N/A';
               
               return Card(
                 elevation: 0,
@@ -93,9 +101,9 @@ class _ProjectDataValidationScreenState extends State<ProjectDataValidationScree
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Work ID: ${row['id']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          Text('Work ID: ${row['work_id']}', style: const TextStyle(fontWeight: FontWeight.bold)),
                           Text(
-                            row['status']!,
+                            statusText,
                             style: TextStyle(
                               color: hasError ? Colors.red : Colors.green,
                               fontWeight: FontWeight.bold,
@@ -105,8 +113,8 @@ class _ProjectDataValidationScreenState extends State<ProjectDataValidationScree
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text('Project Name: ${row['name']!.isEmpty ? '(missing)' : row['name']}'),
-                      Text('Recommended Amount: ₹${row['amount']}'),
+                      Text('Description: $description'),
+                      Text('Recommended Amount: $amount'),
                     ],
                   ),
                 ),

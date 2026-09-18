@@ -1,8 +1,10 @@
 ﻿/// Represents a single MPLADS project, aligned with FastAPI ProjectOut schema.
 class Project {
   final String id; // maps to work_id
-  final String name; // maps to description
-  final String location; // maps to constituency, state
+  final String description; // maps to description
+  final String location;
+  final String state;
+  final String district; // maps to constituency, state
   final String status; // maps to project_status
 
   final double estimatedCost; // maps to recommended_amount
@@ -24,8 +26,10 @@ class Project {
 
   Project({
     required this.id,
-    required this.name,
+    required this.description,
     required this.location,
+    required this.state,
+    required this.district,
     required this.status,
     required this.estimatedCost,
     required this.startDate,
@@ -57,7 +61,9 @@ class Project {
 
     return Project(
       id: json['work_id'] as String? ?? json['id'] as String? ?? 'Unknown',
-      name: json['description'] as String? ?? json['name'] as String? ?? 'Unknown Project',
+      description: json['description'] as String? ?? json['name'] as String? ?? 'Unknown Project',
+      state: json['state'] as String? ?? 'Unknown',
+      district: json['constituency'] as String? ?? 'Unknown',
       location: (json['state'] != null && json['constituency'] != null) 
           ? '${json['constituency']}, ${json['state']}'
           : json['location'] as String? ?? 'Unknown Location',

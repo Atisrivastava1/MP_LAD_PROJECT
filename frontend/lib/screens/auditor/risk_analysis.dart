@@ -154,7 +154,7 @@ class _RiskAnalysisScreenState extends State<RiskAnalysisScreen> {
                     children: [
                       Text(project.id,
                           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text(project.name,
+                      Text(project.description,
                           style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis),

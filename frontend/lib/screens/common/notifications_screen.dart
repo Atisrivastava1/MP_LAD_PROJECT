@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
 import '../../widgets/profile_header.dart';
 
 /// Notifications Screen — lists all system notifications.
 /// Used by both Auditor and Data Manager roles.
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   final String role;
   final String userName;
   final String userId;
@@ -15,51 +16,37 @@ class NotificationsScreen extends StatelessWidget {
     this.userId = 'USR-001',
   });
 
-  // Placeholder notification data — replace with API call
-  static const List<_NotifItem> _mockNotifs = [
-    _NotifItem(
-      icon: Icons.warning_amber_rounded,
-      color: Color(0xFFE53935),
-      title: 'Critical Risk Detected',
-      body: 'Work ID 175556 has been flagged with a risk score of 91/100.',
-      time: '2 min ago',
-    ),
-    _NotifItem(
-      icon: Icons.file_upload_outlined,
-      color: Color(0xFF2F6FED),
-      title: 'CSV Upload Complete',
-      body: '120 projects imported successfully. 3 anomalies detected.',
-      time: '15 min ago',
-    ),
-    _NotifItem(
-      icon: Icons.check_circle_outline,
-      color: Color(0xFF43A047),
-      title: 'Investigation Submitted',
-      body: 'Investigation INV-2024-045 submitted by Auditor Ramesh Kumar.',
-      time: '1 hour ago',
-    ),
-    _NotifItem(
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  List<_NotifItem> _mockNotifs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotifs();
+  }
+
+  Future<void> _loadNotifs() async {
+    final rawList = await ApiService.fetchNotifications();
+    final notifs = rawList.map((m) => _NotifItem(
       icon: Icons.info_outline,
-      color: Color(0xFFFF8F00),
-      title: 'Data Quality Alert',
-      body: '15 projects are missing Completion Date. Please review.',
-      time: '3 hours ago',
-    ),
-    _NotifItem(
-      icon: Icons.copy_all_outlined,
-      color: Color(0xFF8E24AA),
-      title: 'Duplicate Detected',
-      body: 'Work ID 172001 may be a duplicate of Work ID 175556.',
-      time: 'Yesterday',
-    ),
-    _NotifItem(
-      icon: Icons.update_outlined,
-      color: Color(0xFF00ACC1),
-      title: 'ML Model Updated',
-      body: 'ML model updated to version 1.1.0. Re-analysis scheduled.',
-      time: '2 days ago',
-    ),
-  ];
+      color: m['type'] == 'alert' ? const Color(0xFFE53935) : const Color(0xFF2F6FED),
+      title: m['title']?.toString() ?? 'Notification',
+      body: m['message']?.toString() ?? '',
+      time: m['time']?.toString() ?? '',
+    )).toList();
+    if (mounted) {
+      setState(() {
+        _mockNotifs = notifs;
+      });
+    }
+  }
+
+  // Placeholder notification data — replace with API call
+
 
   @override
   Widget build(BuildContext context) {

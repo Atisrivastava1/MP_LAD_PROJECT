@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from database.connection import get_db
-from auth.rbac import auditor_only
+from auth.rbac import auditor_only, any_authenticated
 from models.user import User
 from models.audit_log import AuditLog
 
@@ -41,3 +41,23 @@ def list_audit_logs(
         .limit(limit)
         .all()
     )
+
+
+@router.get("/notifications", summary="Get recent system notifications")
+def system_notifications(
+    db: Session = Depends(get_db),
+    _: User = Depends(any_authenticated),
+) -> list[dict]:
+    # We can fetch recent audit logs as notifications
+    from models.audit_log import AuditLog
+    logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(10).all()
+    return [
+        {
+            "id": log.log_id,
+            "title": "System Alert",
+            "message": log.action,
+            "time": log.created_at.strftime("%Y-%m-%d %H:%M"),
+            "read": False,
+            "type": "alert" if "failed" in log.action.lower() else "info"
+        } for log in logs
+    ]

@@ -1,5 +1,7 @@
 ﻿import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import '../../services/api_service.dart';
 import 'project_data_validation.dart';
@@ -20,6 +22,8 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
 
   // Desktop flow state: 0 = Upload, 1 = Validation, 2 = Progress
   int _desktopStep = 0;
+  Map<String, dynamic>? _uploadResult;
+  List<String> _workIds = [];
 
   @override
   void dispose() {
@@ -28,6 +32,7 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
   }
 
   String? _pickedFilePath;
+  Uint8List? _pickedFileBytes;
 
   Future<void> _pickFile() async {
     try {
@@ -36,10 +41,12 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
         allowedExtensions: ['csv', 'xlsx'],
       );
       
-      if (files.isNotEmpty && files.single.path != null) {
+      if (files.isNotEmpty) {
+        final bytes = await files.single.readAsBytes();
         setState(() {
           _pickedFileName = files.single.name;
           _pickedFilePath = files.single.path;
+          _pickedFileBytes = bytes;
         });
       }
     } catch (e) {
@@ -48,7 +55,7 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
   }
 
   Future<void> _submitUpload() async {
-    if (_pickedFilePath == null) {
+    if (_pickedFilePath == null && _pickedFileBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a file to upload.')),
       );
@@ -56,17 +63,26 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
     }
     setState(() => _isUploading = true);
     try {
-      final success = await ApiService.uploadProjectFile(_pickedFilePath!);
+      Map<String, dynamic>? uploadResult;
+      if (kIsWeb && _pickedFileBytes != null) {
+        uploadResult = await ApiService.uploadProjectFileWeb(_pickedFileBytes!, _pickedFileName!);
+      } else if (_pickedFilePath != null) {
+        uploadResult = await ApiService.uploadProjectFile(_pickedFilePath!);
+      }
       if (!mounted) return;
-      if (success) {
+      if (uploadResult != null) {
         final isDesktop = MediaQuery.of(context).size.width >= 900;
         if (isDesktop) {
-          setState(() => _desktopStep = 1);
+          setState(() { 
+            _uploadResult = uploadResult;
+            _desktopStep = 1; 
+          });
         } else {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (_) => ProjectDataValidationScreen(
               fileName: _pickedFileName!,
               validityDays: int.tryParse(_validityDaysCtrl.text) ?? 30,
+              uploadResult: uploadResult!,
             ),
           ));
         }
@@ -80,8 +96,11 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
     }
   }
 
-  void _onValidationComplete() {
-    setState(() => _desktopStep = 2);
+  void _onValidationComplete(List<String> workIds) {
+    setState(() {
+      _workIds = workIds;
+      _desktopStep = 2;
+    });
   }
 
   @override
@@ -354,6 +373,7 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
     } else if (_desktopStep == 1) {
       // Embed validation screen inside desktop layout without an app bar
       return ProjectDataValidationScreen(
+                uploadResult: _uploadResult ?? {},
         fileName: _pickedFileName!,
         validityDays: int.tryParse(_validityDaysCtrl.text) ?? 30,
         isEmbedded: true,
@@ -363,6 +383,7 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
     } else {
       // Embed progress screen inside desktop layout
       return ImportProgressScreen(
+                workIds: _workIds,
         fileName: _pickedFileName!,
         isEmbedded: true,
         onBack: () => setState(() => _desktopStep = 1),

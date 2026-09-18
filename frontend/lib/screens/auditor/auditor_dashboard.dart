@@ -16,24 +16,42 @@ class AuditorDashboardScreen extends StatefulWidget {
   State<AuditorDashboardScreen> createState() => _AuditorDashboardScreenState();
 }
 
+class _DashboardData {
+  final Map<String, dynamic> stats;
+  final List<Map<String, dynamic>> alerts;
+  _DashboardData(this.stats, this.alerts);
+}
+
 class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
-  late Future<Map<String, int>> _statsFuture;
+  late Future<_DashboardData> _dataFuture;
 
   @override
   void initState() {
     super.initState();
-    _statsFuture = ApiService.fetchDashboardStats();
+    _dataFuture = _loadData();
   }
 
-  void _refresh() => setState(() => _statsFuture = ApiService.fetchDashboardStats());
+  Future<_DashboardData> _loadData() async {
+    final stats = await ApiService.fetchDashboardStats();
+    final alerts = await ApiService.fetchRecentAlerts();
+    return _DashboardData(stats, alerts);
+  }
+
+  void _refresh() => setState(() => _dataFuture = _loadData());
+  
+
+  @override
+  
+
+  
 
   @override
   Widget build(BuildContext context) {
     return AppShell(
       title: 'Auditor Dashboard',
       selectedIndex: 0,
-      body: FutureBuilder<Map<String, int>>(
-        future: _statsFuture,
+      body: FutureBuilder<_DashboardData>(
+        future: _dataFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -53,14 +71,16 @@ class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
             );
           }
 
-          final stats = snapshot.data!;
+          final data = snapshot.data!;
+          final stats = data.stats.cast<String, int>();
+          final alerts = data.alerts;
 
           return LayoutBuilder(
             builder: (context, constraints) {
               if (constraints.maxWidth >= 900) {
-                return _buildDesktopLayout(stats);
+                return _buildDesktopLayout(stats, alerts);
               }
-              return _buildMobileLayout(stats);
+              return _buildMobileLayout(stats, alerts);
             },
           );
         },
@@ -69,7 +89,7 @@ class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
   }
 
   // ── Desktop Layout ────────────────────────────────────────────────────────
-  Widget _buildDesktopLayout(Map<String, int> stats) {
+  Widget _buildDesktopLayout(Map<String, int> stats, List<Map<String, dynamic>> alerts) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -262,9 +282,17 @@ class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        const _RecentAlertTile(workId: '175556', mpName: 'Shri Rajesh Gupta', riskScore: 91.7, riskLevel: 'Critical', reasons: 'Cost Anomaly, Delay, Duplicate'),
-                        const _RecentAlertTile(workId: '177320', mpName: 'Shri Mohan Das', riskScore: 84.0, riskLevel: 'High', reasons: 'Missing Completion Date, Generic Description'),
-                        const _RecentAlertTile(workId: '172001', mpName: 'Smt. Kavita Sharma', riskScore: 78.0, riskLevel: 'High', reasons: 'Duplicate Detected'),
+                        ...alerts.map((a) => _RecentAlertTile(
+                          workId: a['work_id'] ?? '',
+                          mpName: a['mp_name'] ?? 'Unknown',
+                          riskScore: (a['risk_score'] as num?)?.toDouble() ?? 0.0,
+                          riskLevel: a['risk_level'] ?? 'High',
+                          reasons: () {
+                            final val = a['why_flagged'] ?? a['risk_reasons'];
+                            if (val is List) return val.join(', ');
+                            return val?.toString() ?? 'Anomaly detected';
+                          }(),
+                        )),
                       ],
                     ),
                   ),
@@ -294,7 +322,7 @@ class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
   }
 
   // ── Mobile Layout ─────────────────────────────────────────────────────────
-  Widget _buildMobileLayout(Map<String, int> stats) {
+  Widget _buildMobileLayout(Map<String, int> stats, List<Map<String, dynamic>> alerts) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(

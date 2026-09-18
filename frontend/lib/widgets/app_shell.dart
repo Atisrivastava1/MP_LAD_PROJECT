@@ -46,6 +46,16 @@ class _AppShellState extends State<AppShell> {
   bool _sidebarExpanded = true;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (ApiService.currentUser == null) {
+        Navigator.of(context).pushNamedAndRemoveUntil('/login', (r) => false);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -74,7 +84,7 @@ class _AppShellState extends State<AppShell> {
             width: _sidebarExpanded ? kSidebarExpandedWidth : kSidebarCollapsedWidth,
             child: SidebarNav(
               selectedIndex: widget.selectedIndex,
-              role: ApiService.currentUser?.role ?? 'Auditor',
+              role: ApiService.currentUser?.role ?? '',
               expanded: _sidebarExpanded,
               onToggle: () => setState(() => _sidebarExpanded = !_sidebarExpanded),
             ),
@@ -160,9 +170,9 @@ class _AppShellState extends State<AppShell> {
 
           // Profile chip
           ProfileHeaderChip(
-            userName: ApiService.currentUser?.name ?? 'Shri Ramesh Kumar',
-            role: ApiService.currentUser?.role ?? 'Auditor',
-            userId: ApiService.currentUser?.id ?? 'USR-001',
+            userName: ApiService.currentUser?.name ?? '',
+            role: ApiService.currentUser?.role ?? '',
+            userId: ApiService.currentUser?.id ?? '',
           ),
         ],
       ),
@@ -172,7 +182,7 @@ class _AppShellState extends State<AppShell> {
   // ── Mobile Layout ───────────────────────────────────────────────────────
 
   Widget _buildMobileLayout(BuildContext context) {
-    final role = ApiService.currentUser?.role ?? 'Auditor';
+    final role = ApiService.currentUser?.role ?? '';
     final navItems = _navItemsForRole(role);
 
     return Scaffold(
@@ -189,9 +199,9 @@ class _AppShellState extends State<AppShell> {
           ),
           // Profile chip (compact for mobile)
           ProfileHeaderChip(
-            userName: ApiService.currentUser?.name ?? 'Shri Ramesh Kumar',
+            userName: ApiService.currentUser?.name ?? '',
             role: role,
-            userId: ApiService.currentUser?.id ?? 'USR-001',
+            userId: ApiService.currentUser?.id ?? '',
             compact: true,
           ),
           const SizedBox(width: 8),
@@ -232,7 +242,7 @@ class _AppShellState extends State<AppShell> {
   void _onNavTap(BuildContext context, int index) {
     if (index == widget.selectedIndex) return;
     
-    final role = ApiService.currentUser?.role ?? 'Auditor';
+    final role = ApiService.currentUser?.role ?? '';
 
     if (role == 'Data Manager') {
       switch (index) {

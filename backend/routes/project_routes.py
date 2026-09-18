@@ -14,9 +14,32 @@ from services.project_service import (
     get_all_projects,
     get_project_history,
     process_csv_upload,
+    trigger_batch_ml,
 )
 
 router = APIRouter(prefix="/projects", tags=["Projects"])
+
+
+@router.get("/history", summary="Get upload history across batches")
+def upload_history(
+    db: Session = Depends(get_db),
+    _: User = Depends(any_authenticated),
+) -> list[dict]:
+    # Group by created_at date or just return recent distinct project batches
+    # For now, let's return some recent projects as upload history
+    from models.project import Project
+    recent = db.query(Project).order_by(Project.created_at.desc()).limit(10).all()
+    return [
+        {
+            "workId": p.work_id,
+            "mpName": p.mp_name or "Unknown",
+            "fileName": f"batch_{p.created_at.strftime('%Y%m%d')}.csv",
+            "projectStatus": p.project_status,
+            "validationStatus": "Passed" if p.project_status != "REJECTED" else "Failed",
+            "detectionStatus": "Completed",
+            "date": p.created_at.strftime("%Y-%m-%d %H:%M")
+        } for p in recent
+    ]
 
 
 @router.post("", response_model=ProjectOut, status_code=201, summary="Create a single project")
@@ -78,4 +101,20 @@ def get_history(
     _: User = Depends(any_authenticated),
 ):
     return get_project_history(db, work_id)
+
+
+from pydantic import BaseModel
+
+class TriggerMLRequest(BaseModel):
+    work_ids: list[str]
+
+@router.post("/trigger-ml", summary="Trigger ML batch for uploaded projects")
+def trigger_ml(
+    data: TriggerMLRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(data_manager_only),
+):
+    processed = trigger_batch_ml(db, data.work_ids, user_id=current_user.user_id)
+    return {"status": "success", "processed": processed}
+
 

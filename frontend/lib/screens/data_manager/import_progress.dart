@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import '../../services/api_service.dart';
 
 class ImportProgressScreen extends StatefulWidget {
   final String fileName;
+  final List<String> workIds;
   final bool isEmbedded;
   final VoidCallback? onBack;
 
   const ImportProgressScreen({
     super.key,
     required this.fileName,
+    required this.workIds,
     this.isEmbedded = false,
     this.onBack,
   });
@@ -27,12 +30,23 @@ class _ImportProgressScreenState extends State<ImportProgressScreen> {
   }
 
   void _simulateProgress() async {
-    // Simulate progression through the steps
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) setState(() => _currentStep = 3);
+    // Step 2 is Importing (already done on validation step basically, so skip quickly)
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    setState(() => _currentStep = 3); // AI Analysis
     
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) setState(() => _currentStep = 4);
+    // Trigger real ML batch
+    final success = await ApiService.triggerBatchML(widget.workIds);
+    
+    if (mounted) {
+      if (success) {
+        setState(() => _currentStep = 5); // Done
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to complete AI Analysis.')),
+        );
+      }
+    }
   }
 
   @override
@@ -79,7 +93,7 @@ class _ImportProgressScreenState extends State<ImportProgressScreen> {
           width: double.infinity,
           height: 50,
           child: ElevatedButton(
-            onPressed: _currentStep == 4
+            onPressed: _currentStep >= 4
                 ? () {
                     Navigator.of(context).pushNamedAndRemoveUntil('/data-manager-dashboard', (r) => false);
                   }

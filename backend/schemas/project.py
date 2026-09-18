@@ -66,6 +66,8 @@ class CSVRowResult(BaseModel):
     work_id: str
     status: str            # "created" | "updated" | "skipped" | "error"
     reason: str | None = None
+    description: str | None = None
+    recommended_amount: float | None = None
 
 
 class CSVUploadResult(BaseModel):

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:typed_data';
 import '../models/project.dart';
 import '../models/investigation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -169,25 +170,56 @@ class ApiService {
   }
 
   static Future<List<Map<String, String>>> fetchUploadHistory() async {
-    return [
-      {
-        'workId': 'CSV-TEST-01',
-        'mpName': 'Test MP',
-        'fileName': 'test1.csv',
-        'projectStatus': 'Processed',
-        'validationStatus': 'Passed',
-        'detectionStatus': 'Completed',
-      },
-    ];
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(Uri.parse('$baseUrl/projects/history'), headers: headers);
+      if (res.statusCode == 200) {
+        final List data = jsonDecode(res.body);
+        return data.map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+      }
+    } catch (e) {
+      print('fetchUploadHistory error: $e');
+    }
+    return [];
   }
 
   static Future<List<Map<String, String>>> fetchAuditReports() async {
-    return [
-      {'title': 'Monthly Risk Overview', 'date': '01 Sep 2026', 'status': 'Generated'},
-    ];
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(Uri.parse('$baseUrl/dashboard/reports'), headers: headers);
+      if (res.statusCode == 200) {
+        final List data = jsonDecode(res.body);
+        return data.map((e) => Map<String, String>.from(e.map((k, v) => MapEntry(k.toString(), v.toString())))).toList();
+      }
+    } catch (e) {
+      print('fetchAuditReports error: $e');
+    }
+    return [];
   }
 
-  static Future<bool> uploadProjectFile(String filePath) async {
+    static Future<Map<String, dynamic>?> uploadProjectFileWeb(Uint8List bytes, String filename) async {
+    try {
+      final token = await getToken();
+      final request = http.MultipartRequest('POST', Uri.parse(baseUrl + '/projects/upload'));
+      if (token != null) request.headers['Authorization'] = 'Bearer ' + token;
+      
+      request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      
+      final response = await request.send();
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final respStr = await response.stream.bytesToString();
+        return jsonDecode(respStr) as Map<String, dynamic>;
+      } else {
+        print('Upload failed with status: ' + response.statusCode.toString());
+        return null;
+      }
+    } catch (e) {
+      print('Upload error: ' + e.toString());
+      return null;
+    }
+  }
+
+  static Future<Map<String, dynamic>?> uploadProjectFile(String filePath) async {
     try {
       final token = await getToken();
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/projects/upload'));
@@ -196,15 +228,16 @@ class ApiService {
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
       
       final response = await request.send();
-      if (response.statusCode == 200) {
-        return true;
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final respStr = await response.stream.bytesToString();
+        return jsonDecode(respStr) as Map<String, dynamic>;
       } else {
         print('Upload failed with status: ${response.statusCode}');
-        return false;
+        return null;
       }
     } catch (e) {
       print('Upload error: $e');
-      return false;
+      return null;
     }
   }
 
@@ -296,4 +329,53 @@ class ApiService {
   static submitReviewDecision({required String investigationId, required String decision, required String comment}) => _mockError();
   static fetchAnomalies(String id) => _mockError();
   static fetchProjectDetails(String id) => _mockError();
+
+
+  static Future<List<Map<String, dynamic>>> fetchNotifications() async {
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(Uri.parse('$baseUrl/audit-logs/notifications'), headers: headers);
+      if (res.statusCode == 200) {
+        final List data = jsonDecode(res.body);
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('fetchNotifications error: $e');
+    }
+    return [];
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchRecentAlerts() async {
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(Uri.parse('$baseUrl/dashboard/high-risk'), headers: headers);
+      if (res.statusCode == 200) {
+        final List data = jsonDecode(res.body);
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('fetchRecentAlerts error: $e');
+    }
+    return [];
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchRiskProjects() async {
+    return fetchRecentAlerts(); // Same endpoint works for risk project list
+  }
+
+  static Future<bool> triggerBatchML(List<String> workIds) async {
+    try {
+      final headers = await _getHeaders();
+      final response = await http.post(
+        Uri.parse(baseUrl + '/projects/trigger-ml'),
+        headers: headers,
+        body: jsonEncode({'work_ids': workIds}),
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      print('triggerBatchML error: ' + e.toString());
+      return false;
+    }
+  }
+
 }

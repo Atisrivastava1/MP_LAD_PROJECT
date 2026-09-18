@@ -55,11 +55,7 @@ def create_project(
 
     log_action(db, action="PROJECT_CREATED", user_id=user_id, project_id=project.project_id, new_value=f"work_id={project.work_id}", status="SUCCESS")
 
-    try:
-        run_and_store_prediction(db, project_id=project.project_id, project_data=project_data, user_id=user_id)
-    except Exception as exc:
-        logger.error("ML inference failed: %s", exc)
-        log_action(db, action="PREDICTION_FAILED", user_id=user_id, project_id=project.project_id, new_value=str(exc), status="ERROR")
+    # ML prediction removed from create_project. Trigger via batch ML.
 
     return project
 
@@ -168,11 +164,8 @@ def process_csv_upload(
                 db.commit()
                 db.refresh(existing)
                 
-                project_dict = {c.name: getattr(existing, c.name) for c in existing.__table__.columns}
-                run_and_store_prediction(db, project_id=existing.project_id, project_data=project_dict, user_id=user_id)
-
                 updated += 1
-                results.append(CSVRowResult(work_id=work_id, status="updated"))
+                results.append(CSVRowResult(work_id=work_id, status="updated", description=existing.description, recommended_amount=existing.recommended_amount))
             except Exception as exc:
                 db.rollback()
                 errors += 1
@@ -197,7 +190,7 @@ def process_csv_upload(
             )
             create_project(db, data, user_id=user_id)
             created += 1
-            results.append(CSVRowResult(work_id=work_id, status="created"))
+            results.append(CSVRowResult(work_id=work_id, status="created", description=data.description, recommended_amount=data.recommended_amount))
         except HTTPException as exc:
             errors += 1
             results.append(CSVRowResult(work_id=work_id, status="error", reason=exc.detail))
@@ -233,3 +226,18 @@ def _safe_bool(row, col: str) -> bool | None:
     if val is None or (isinstance(val, float) and pd.isna(val)): return None
     if isinstance(val, bool): return val
     return str(val).strip().lower() in ("1", "true", "yes")
+
+
+def trigger_batch_ml(db: Session, work_ids: list[str], user_id: str | None = None) -> int:
+    processed = 0
+    for work_id in work_ids:
+        existing = db.query(Project).filter(Project.work_id == work_id).first()
+        if not existing:
+            continue
+        try:
+            project_dict = {c.name: getattr(existing, c.name) for c in existing.__table__.columns}
+            run_and_store_prediction(db, project_id=existing.project_id, project_data=project_dict, user_id=user_id)
+            processed += 1
+        except Exception as exc:
+            logger.error("Batch ML failed for %s: %s", work_id, exc)
+    return processed

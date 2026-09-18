@@ -169,7 +169,7 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text(p.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87)),
+                            Text(p.description, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87)),
                             const SizedBox(height: 4),
                             Text('₹${p.estimatedCost}', style: const TextStyle(fontSize: 14, color: Colors.black54)),
                             const SizedBox(height: 4),
