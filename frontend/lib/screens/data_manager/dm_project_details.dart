@@ -45,7 +45,7 @@ class DmProjectDetailsScreen extends StatelessWidget {
                 
                 const Text('Financial & Timeline', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF2F6FED))),
                 const SizedBox(height: 16),
-                _buildDetailRow('Recommended Amount', '₹'),
+                _buildDetailRow('Recommended Amount', '₹${project.formattedCost}'),
                 const Divider(height: 24),
                 _buildDetailRow('Completion Date', project.endDate?.toString().split(' ')[0] ?? 'N/A'),
                 const Divider(height: 24),
@@ -57,7 +57,13 @@ class DmProjectDetailsScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 _buildDetailRow('Status', project.status),
                 const Divider(height: 24),
-                _buildDetailRow('Risk Score', '/100'),
+                _buildDetailRow('Risk Score', '${project.effectiveRiskScore} / 100'),
+                const Divider(height: 24),
+                _buildDetailRow('Risk Level', project.riskLevel),
+                if (project.effectiveRiskTags.isNotEmpty) ...[
+                  const Divider(height: 24),
+                  _buildDetailRow('Why Flagged', project.effectiveRiskTags.join(' + ')),
+                ],
                 const Divider(height: 24),
                 _buildDetailRow('Last Updated', project.lastUpdated),
               ],

@@ -1,5 +1,5 @@
 ﻿"""
-main.py â€” MPLADS Sentinel FastAPI application entry point
+main.py â€” MPLADS Sanchalan FastAPI application entry point
 
 Run with:
     uvicorn main:app --reload
@@ -36,11 +36,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Create tables and seed demo users on startup."""
-    logger.info("Starting MPLADS Sentinel backend...")
+    logger.info("Starting MPLADS Sanchalan backend...")
     init_db()
     logger.info("Database ready. Demo users: demo_manager / demo_auditor (password: Demo@1234)")
     yield
-    logger.info("Shutting down MPLADS Sentinel backend.")
+    logger.info("Shutting down MPLADS Sanchalan backend.")
 
 
 app = FastAPI(
@@ -99,7 +99,7 @@ app.include_router(dashboard_router,     prefix=PREFIX)
 
 @app.get("/", tags=["Health"], summary="Health check")
 def root():
-    return {"status": "ok", "service": "MPLADS Sentinel API", "version": "1.0.0-prototype"}
+    return {"status": "ok", "service": "MPLADS Sanchalan API", "version": "1.0.0-prototype"}
 
 
 @app.get("/health", tags=["Health"], summary="Liveness check")

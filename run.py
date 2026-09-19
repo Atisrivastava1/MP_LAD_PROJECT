@@ -1,4 +1,4 @@
-# run.py — start the MPLADS Sentinel backend from the project root
+# run.py — start the MPLADS Sanchalan backend from the project root
 # Usage: python run.py
 # This ensures ml_engine/ is importable alongside backend/
 

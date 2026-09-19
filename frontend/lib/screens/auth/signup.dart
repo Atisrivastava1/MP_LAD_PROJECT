@@ -191,7 +191,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'MPLADS SENTINEL',
+                  'MPLADS SANCHALAN',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isMobile ? 22 : 28,

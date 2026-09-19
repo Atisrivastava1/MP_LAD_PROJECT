@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-
 import '../../services/api_service.dart';
-import '../../widgets/app_shell.dart';
 
 class DataManagerDashboardScreen extends StatefulWidget {
   const DataManagerDashboardScreen({super.key});
@@ -12,41 +10,53 @@ class DataManagerDashboardScreen extends StatefulWidget {
 }
 
 class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen> {
-  late Future<Map<String, dynamic>> _statsFuture;
+  late Future<Map<String, dynamic>> _dashboardStatsFuture;
 
   @override
   void initState() {
     super.initState();
-    _refreshData();
+    _dashboardStatsFuture = ApiService.fetchDataManagerDashboardStats();
   }
 
-  void _refreshData() {
+  Future<void> _refreshData() async {
     setState(() {
-      _statsFuture = ApiService.fetchDataManagerDashboardStats();
+      _dashboardStatsFuture = ApiService.fetchDataManagerDashboardStats();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return AppShell(
-      title: 'Data Manager Dashboard',
-      selectedIndex: 0,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 900;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF4F7FE),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _dashboardStatsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                  const SizedBox(height: 16),
+                  Text('Error loading dashboard: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.redAccent)),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _refreshData,
+                    child: const Text('Retry'),
+                  )
+                ],
+              ),
+            );
+          }
 
-          return FutureBuilder<Map<String, dynamic>>(
-            future: _statsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError || !snapshot.hasData) {
-                return Center(child: Text('Failed to load dashboard: ${snapshot.error}'));
-              }
-              final stats = snapshot.data!;
-
-              if (isDesktop) {
+          final stats = snapshot.data!;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth > 900) {
                 return _buildDesktopLayout(stats);
               }
               return _buildMobileLayout(stats);
@@ -54,84 +64,64 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _refreshData,
+        backgroundColor: const Color(0xFF4318FF),
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
     );
   }
 
   Widget _buildDesktopLayout(Map<String, dynamic> stats) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(32.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Overview', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 4),
-                  Text('Track data ingestion and quality metrics.', style: TextStyle(fontSize: 14, color: Colors.black54)),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: _refreshData,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Refresh'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0B1F3A),
-                  foregroundColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Row 1: Stat Cards
+          _buildHeader(),
+          const SizedBox(height: 32),
           Row(
             children: [
               Expanded(
-                child: _StatCard(
-                  title: 'Total Projects',
+                child: _buildGradientStatCard(
+                  title: 'Total Uploads',
                   value: '${stats['totalProjects']}',
-                  icon: Icons.folder,
-                  color: Colors.blue,
+                  icon: Icons.cloud_upload_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFF4318FF), Color(0xFF868CFF)]),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 24),
               Expanded(
-                child: _StatCard(
-                  title: 'Current Projects',
-                  value: '${stats['newProjects']}',
-                  icon: Icons.new_releases,
-                  color: Colors.purple,
+                child: _buildGradientStatCard(
+                  title: 'Pending Review',
+                  value: '${stats['pendingProjects']}',
+                  icon: Icons.pending_actions_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]),
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 24),
               Expanded(
-                child: _StatCard(
-                  title: 'Processed Projects',
-                  value: '${stats['recordsProcessed']}',
-                  icon: Icons.dataset,
-                  color: Colors.teal,
+                child: _buildGradientStatCard(
+                  title: 'Completed Audits',
+                  value: '${stats['completedProjects']}',
+                  icon: Icons.verified_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFF00B09B), Color(0xFF96C93D)]),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-
-          // Row 2: Charts and Risks
+          const SizedBox(height: 32),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                flex: 1,
-                child: _buildDataOverviewChart(stats),
+                flex: 5,
+                child: _buildModernDataOverview(stats),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 32),
               Expanded(
-                flex: 1,
-                child: _buildRiskSummary(stats),
+                flex: 4,
+                child: _buildAIAnalysisSummary(stats),
               ),
             ],
           ),
@@ -142,277 +132,418 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
 
   Widget _buildMobileLayout(Map<String, dynamic> stats) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Overview', style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 4),
-          const Text('Track data ingestion and quality metrics.', style: TextStyle(fontSize: 14, color: Colors.black54)),
-          const SizedBox(height: 20),
-          
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    title: 'Total Projects',
-                    value: '${stats['totalProjects']}',
-                    icon: Icons.folder,
-                    color: Colors.blue,
-                    isSmall: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    title: 'Current Projects',
-                    value: '${stats['newProjects']}',
-                    icon: Icons.new_releases,
-                    color: Colors.purple,
-                    isSmall: true,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    title: 'Processed Projects',
-                    value: '${stats['recordsProcessed']}',
-                    icon: Icons.dataset,
-                    color: Colors.teal,
-                    isSmall: true,
-                  ),
-                ),
-              ],
-            ),
+          _buildHeader(isMobile: true),
+          const SizedBox(height: 24),
+          _buildGradientStatCard(
+            title: 'Total Uploads',
+            value: '${stats['totalProjects']}',
+            icon: Icons.cloud_upload_rounded,
+            gradient: const LinearGradient(colors: [Color(0xFF4318FF), Color(0xFF868CFF)]),
+          ),
+          const SizedBox(height: 16),
+          _buildGradientStatCard(
+            title: 'Pending Review',
+            value: '${stats['pendingProjects']}',
+            icon: Icons.pending_actions_rounded,
+            gradient: const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]),
+          ),
+          const SizedBox(height: 16),
+          _buildGradientStatCard(
+            title: 'Completed Audits',
+            value: '${stats['completedProjects']}',
+            icon: Icons.verified_rounded,
+            gradient: const LinearGradient(colors: [Color(0xFF00B09B), Color(0xFF96C93D)]),
           ),
           const SizedBox(height: 24),
-          _buildDataOverviewChart(stats),
+          _buildModernDataOverview(stats),
           const SizedBox(height: 24),
-          _buildRiskSummary(stats),
+          _buildAIAnalysisSummary(stats),
+          const SizedBox(height: 48), // Padding for FAB
         ],
       ),
     );
   }
 
-  Widget _buildDataOverviewChart(Map<String, dynamic> stats) {
-    final completed = (stats['completedProjects'] as int).toDouble();
-    final ongoing = (stats['ongoingProjects'] as int).toDouble();
-    final pending = (stats['pendingProjects'] as int).toDouble();
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Data Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                SizedBox(
-                  width: 150,
-                  height: 150,
-                  child: Stack(
-                    children: [
-                      PieChart(
-                        PieChartData(
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 55,
-                          sections: [
-                            PieChartSectionData(
-                              color: Colors.green,
-                              value: completed,
-                              title: '',
-                              radius: 15,
-                            ),
-                            PieChartSectionData(
-                              color: Colors.blue,
-                              value: ongoing,
-                              title: '',
-                              radius: 15,
-                            ),
-                            PieChartSectionData(
-                              color: Colors.orange,
-                              value: pending,
-                              title: '',
-                              radius: 15,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('100%', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                            Text('Processed', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildLegendItem('Completed', Colors.green, stats['completedProjects'].toString()),
-                      const SizedBox(height: 12),
-                      _buildLegendItem('Ongoing', Colors.blue, stats['ongoingProjects'].toString()),
-                      const SizedBox(height: 12),
-                      _buildLegendItem('Pending', Colors.orange, stats['pendingProjects'].toString()),
-                    ],
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem(String label, Color color, String value) {
+  Widget _buildHeader({bool isMobile = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-          ],
+        Text(
+          'Workspace Overview',
+          style: TextStyle(
+            fontSize: isMobile ? 24 : 32,
+            fontWeight: FontWeight.w800,
+            color: const Color(0xFF2B3674),
+            letterSpacing: -0.5,
+          ),
         ),
-        const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Text(
+          'Monitor your dataset ingestion and ML anomaly predictions.',
+          style: TextStyle(
+            fontSize: isMobile ? 14 : 16,
+            color: const Color(0xFFA3AED0),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildRiskSummary(Map<String, dynamic> stats) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Risk Summary', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('Anomalies detected across all projects', style: TextStyle(color: Colors.black54, fontSize: 13)),
-            const SizedBox(height: 24),
-            _buildRiskRow('High Risk', stats['highRisk'].toString(), Colors.red, Icons.warning_rounded, 0.1),
-            const Divider(height: 32),
-            _buildRiskRow('Medium Risk', stats['mediumRisk'].toString(), Colors.orange, Icons.info_outline, 0.3),
-            const Divider(height: 32),
-            _buildRiskRow('Low Risk', stats['lowRisk'].toString(), Colors.green, Icons.check_circle_outline, 0.6),
-          ],
-        ),
+  Widget _buildGradientStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Gradient gradient,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: gradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.colors.first.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFA3AED0),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B3674),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildRiskRow(String label, String value, Color color, IconData icon, double fraction) {
+  Widget _buildModernDataOverview(Map<String, dynamic> stats) {
+    final int total = stats['totalProjects'] ?? 1;
+    final int completed = stats['completedProjects'] ?? 0;
+    final int ongoing = stats['ongoingProjects'] ?? 0;
+    final int pending = stats['pendingProjects'] ?? 0;
+    
+    // Prevent division by zero
+    final safeTotal = total == 0 ? 1 : total;
+    final double completePct = (completed / safeTotal) * 100;
+
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Pipeline Status',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2B3674),
+            ),
+          ),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              SizedBox(
+                height: 180,
+                width: 180,
+                child: Stack(
+                  children: [
+                    PieChart(
+                      PieChartData(
+                        sectionsSpace: 4,
+                        centerSpaceRadius: 65,
+                        startDegreeOffset: -90,
+                        sections: [
+                          PieChartSectionData(
+                            color: const Color(0xFF00B09B),
+                            value: completed.toDouble(),
+                            title: '',
+                            radius: 12,
+                          ),
+                          PieChartSectionData(
+                            color: const Color(0xFF4318FF),
+                            value: ongoing.toDouble(),
+                            title: '',
+                            radius: 12,
+                          ),
+                          PieChartSectionData(
+                            color: const Color(0xFFFF9800),
+                            value: pending.toDouble(),
+                            title: '',
+                            radius: 12,
+                          ),
+                          if (total == 0)
+                            PieChartSectionData(
+                              color: Colors.grey.shade200,
+                              value: 1,
+                              title: '',
+                              radius: 12,
+                            ),
+                        ],
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${completePct.toInt()}%',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF2B3674),
+                              height: 1.0,
+                            ),
+                          ),
+                          const Text(
+                            'Done',
+                            style: TextStyle(
+                              color: Color(0xFFA3AED0),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 40),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPipelineLegend('Completed', completed, total, const Color(0xFF00B09B)),
+                    const SizedBox(height: 24),
+                    _buildPipelineLegend('In Progress', ongoing, total, const Color(0xFF4318FF)),
+                    const SizedBox(height: 24),
+                    _buildPipelineLegend('Submitted', pending, total, const Color(0xFFFF9800)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPipelineLegend(String label, int value, int total, Color color) {
+    final double pct = total > 0 ? value / total : 0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFFA3AED0),
+                  ),
+                ),
+              ],
+            ),
+            Text(
+              '$value',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2B3674),
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LinearProgressIndicator(
+          value: pct,
+          backgroundColor: color.withValues(alpha: 0.1),
+          valueColor: AlwaysStoppedAnimation<Color>(color),
+          minHeight: 4,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAIAnalysisSummary(Map<String, dynamic> stats) {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome, color: Color(0xFF4318FF)),
+              SizedBox(width: 8),
+              Text(
+                'ML Risk Distribution',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2B3674),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Latest anomaly predictions by Sentinel Engine.',
+            style: TextStyle(color: Color(0xFFA3AED0), fontSize: 13),
+          ),
+          const SizedBox(height: 32),
+          _buildRiskBar('Critical', stats['criticalRisk'] ?? 0, const Color(0xFFE53935)),
+          const SizedBox(height: 24),
+          _buildRiskBar('High', stats['highRisk'] ?? 0, const Color(0xFFFF9800)),
+          const SizedBox(height: 24),
+          _buildRiskBar('Medium', stats['mediumRisk'] ?? 0, const Color(0xFFFFC107)),
+          const SizedBox(height: 24),
+          _buildRiskBar('Low', stats['lowRisk'] ?? 0, const Color(0xFF4CAF50)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRiskBar(String label, int value, Color color) {
+    // Assuming max possible per risk is 50 for a nice visual scale, or dynamically calc max.
+    // Let's dynamically calculate max safely.
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
+        SizedBox(
+          width: 80,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2B3674),
+            ),
           ),
-          child: Icon(icon, color: color),
         ),
-        const SizedBox(width: 16),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            alignment: Alignment.centerLeft,
             children: [
-              Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: fraction,
-                backgroundColor: color.withValues(alpha: 0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-                borderRadius: BorderRadius.circular(4),
-                minHeight: 6,
+              Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // visually scale the bar (cap at 100% width for visual max of 25 items)
+                  double widthFactor = value / 25.0;
+                  if (widthFactor > 1.0) widthFactor = 1.0;
+                  return Container(
+                    width: constraints.maxWidth * widthFactor,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                  );
+                }
               ),
             ],
           ),
         ),
         const SizedBox(width: 16),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final bool isSmall;
-
-  const _StatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    this.isSmall = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                if (!isSmall) ...[
-                  const Spacer(),
-                  const Icon(Icons.arrow_outward, color: Colors.green, size: 16),
-                  const SizedBox(width: 4),
-                  const Text('12%', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                ]
-              ],
+        SizedBox(
+          width: 30,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2B3674),
+              fontSize: 16,
             ),
-            const SizedBox(height: 16),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(value, style: TextStyle(fontSize: isSmall ? 22 : 28, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(color: Colors.black54, fontSize: isSmall ? 11 : 14),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

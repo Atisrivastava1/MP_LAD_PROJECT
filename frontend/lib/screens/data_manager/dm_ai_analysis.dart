@@ -7,9 +7,19 @@ class DmAiAnalysisScreen extends StatelessWidget {
 
   const DmAiAnalysisScreen({super.key, required this.project, this.isEmbedded = false});
 
+  Color _getRiskColor(String level) {
+    switch (level) {
+      case 'Critical': return const Color(0xFFE53935);
+      case 'High': return Colors.orange;
+      case 'Medium': return Colors.amber;
+      default: return const Color(0xFF43A047);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final bool isFlagged = project.riskScore > 50;
+    final bool isFlagged = project.effectiveRiskScore >= 50;
+    final Color riskColor = _getRiskColor(project.riskLevel);
     
     Widget content = SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -23,15 +33,15 @@ class DmAiAnalysisScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: isFlagged ? const Color(0xFFE53935).withValues(alpha: 0.05) : const Color(0xFF43A047).withValues(alpha: 0.05),
+              color: riskColor.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: isFlagged ? const Color(0xFFE53935) : const Color(0xFF43A047)),
+              border: Border.all(color: riskColor),
             ),
             child: Row(
               children: [
                 Icon(
                   isFlagged ? Icons.warning_amber_rounded : Icons.check_circle_outline,
-                  color: isFlagged ? const Color(0xFFE53935) : const Color(0xFF43A047),
+                  color: riskColor,
                   size: 40,
                 ),
                 const SizedBox(width: 16),
@@ -41,12 +51,12 @@ class DmAiAnalysisScreen extends StatelessWidget {
                     children: [
                       const Text('ML Anomaly Prediction', style: TextStyle(color: Colors.black54, fontSize: 14)),
                       Text(
-                        'Risk Score: ${project.riskScore}/100',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: isFlagged ? const Color(0xFFE53935) : const Color(0xFF43A047)),
+                        'Risk Score: ${project.effectiveRiskScore}/100',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: riskColor),
                       ),
                       Text(
-                        isFlagged ? 'Anomalies Detected' : 'Passed / No Anomalies Detected',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: isFlagged ? const Color(0xFFE53935) : const Color(0xFF43A047)),
+                        isFlagged ? 'Anomalies Detected (${project.riskLevel} Risk)' : 'Passed / No Anomalies Detected',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: riskColor),
                       ),
                     ],
                   ),
@@ -59,12 +69,12 @@ class DmAiAnalysisScreen extends StatelessWidget {
             const SizedBox(height: 32),
             const Text('Detected Anomalies', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF0B1F3A))),
             const SizedBox(height: 16),
-            ...project.riskTags.map((tag) => Padding(
+            ...project.effectiveRiskTags.map((tag) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.circle, size: 8, color: Color(0xFFE53935)),
+                  Icon(Icons.circle, size: 8, color: riskColor),
                   const SizedBox(width: 12),
                   Expanded(child: Text(tag, style: const TextStyle(fontSize: 15, color: Colors.black87))),
                 ],

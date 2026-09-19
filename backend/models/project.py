@@ -54,7 +54,30 @@ class Project(Base):
     audit_logs: Mapped[list["AuditLog"]] = relationship(  # noqa: F821
         "AuditLog", back_populates="project"
     )
+
+    @property
+    def risk_score(self) -> float | None:
+        if not self.predictions:
+            return None
+        latest = max(self.predictions, key=lambda p: p.prediction_created_at)
+        return latest.risk_score
+
+    @property
+    def risk_level(self) -> str | None:
+        if not self.predictions:
+            return None
+        latest = max(self.predictions, key=lambda p: p.prediction_created_at)
+        return latest.risk_level
+
+    @property
+    def why_flagged(self) -> list | None:
+        if not self.predictions:
+            return None
+        latest = max(self.predictions, key=lambda p: p.prediction_created_at)
+        return latest.why_flagged
+
     history: Mapped[list["ProjectHistory"]] = relationship(
+
         "ProjectHistory", back_populates="project", cascade="all, delete-orphan"
     )
 

@@ -126,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'MPLADS SENTINEL',
+                          'MPLADS SANCHALAN',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -262,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'MPLADS SENTINEL',
+                      'MPLADS SANCHALAN',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 22,

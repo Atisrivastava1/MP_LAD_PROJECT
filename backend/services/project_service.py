@@ -112,7 +112,7 @@ def get_project_history(db: Session, work_id: str) -> list[ProjectHistory]:
 
 
 def process_csv_upload(
-    db: Session, file_bytes: bytes, user_id: str | None = None
+    db: Session, file_bytes: bytes, user_id: str | None = None, validity_days: int | None = None
 ) -> CSVUploadResult:
     try:
         df = pd.read_csv(io.BytesIO(file_bytes))
@@ -135,7 +135,7 @@ def process_csv_upload(
             results.append(CSVRowResult(work_id="(blank)", status="error", reason="work_id is blank"))
             continue
 
-        validity_days = _safe_int(row, "update_validity_days")
+        row_validity_days = validity_days if validity_days is not None else _safe_int(row, "update_validity_days")
         status_val = _safe_str(row, "project_status") or "SUBMITTED"
 
         existing = db.query(Project).filter(Project.work_id == work_id).first()
@@ -156,8 +156,8 @@ def process_csv_upload(
                 existing.project_status = status_val
                 existing.uploaded_by = user_id
                 
-                if validity_days is not None:
-                    existing.next_update_due = _calculate_next_update_due(status_val, validity_days)
+                if row_validity_days is not None:
+                    existing.next_update_due = _calculate_next_update_due(status_val, row_validity_days)
                 elif status_val == "COMPLETED":
                     existing.next_update_due = None
 
@@ -186,7 +186,7 @@ def process_csv_upload(
                 completion_date_inconsistent=_safe_bool(row, "completion_date_inconsistent"),
                 completion_delay_missing=_safe_bool(row, "completion_delay_missing"),
                 project_status=status_val,
-                update_validity_days=validity_days
+                update_validity_days=row_validity_days
             )
             create_project(db, data, user_id=user_id)
             created += 1

@@ -84,7 +84,7 @@ class SidebarNav extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'MPLADS Sentinel',
+                          'MPLADS Sanchalan',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,

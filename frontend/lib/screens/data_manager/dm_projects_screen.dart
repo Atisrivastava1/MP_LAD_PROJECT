@@ -14,9 +14,21 @@ class DmProjectsScreen extends StatefulWidget {
 
 class _DmProjectsScreenState extends State<DmProjectsScreen> {
   bool _isLoading = true;
-  List<Project> _projects = [];
+  List<Project> _allProjects = [];
   int? _selectedIndex;
   String _searchQuery = '';
+  
+  List<Project> get _projects {
+    if (_searchQuery.isEmpty) return _allProjects;
+    return _allProjects.where((p) {
+      final q = _searchQuery.toLowerCase();
+      return p.id.toLowerCase().contains(q) ||
+             p.description.toLowerCase().contains(q) ||
+             p.location.toLowerCase().contains(q) ||
+             p.status.toLowerCase().contains(q) ||
+             (p.mpName?.toLowerCase().contains(q) ?? false);
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -27,10 +39,10 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
-      final data = await ApiService.fetchProjects(searchQuery: _searchQuery);
+      final data = await ApiService.fetchProjects();
       if (mounted) {
         setState(() {
-          _projects = data;
+          _allProjects = data;
           _isLoading = false;
         });
       }
@@ -101,8 +113,10 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             ),
             onChanged: (val) {
-              setState(() => _searchQuery = val);
-              _loadData();
+              setState(() {
+                _searchQuery = val;
+                _selectedIndex = null; // reset selection on search
+              });
             },
           ),
         ),
@@ -117,11 +131,22 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
                     final p = _projects[index];
                     final isSelected = _selectedIndex == index;
                     
-                    Color statusColor = Colors.green;
-                    if (p.status == 'Flagged' || p.status == 'Delayed') {
-                      statusColor = Colors.red;
-                    } else if (p.status == 'Ongoing') {
-                      statusColor = Colors.blue;
+                    Color statusColor;
+                    switch (p.status) {
+                      case 'REJECTED':
+                        statusColor = Colors.red;
+                        break;
+                      case 'IN_PROGRESS':
+                        statusColor = Colors.blue;
+                        break;
+                      case 'SUBMITTED':
+                        statusColor = Colors.orange;
+                        break;
+                      case 'COMPLETED':
+                        statusColor = const Color(0xFF43A047);
+                        break;
+                      default:
+                        statusColor = Colors.grey;
                     }
 
                     return GestureDetector(
@@ -158,26 +183,80 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('Work ID: ${p.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0B1F3A))),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(p.status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                                Row(
+                                  children: [
+                                    if (p.effectiveRiskScore > 0) ...[
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _getRiskColor(p.riskLevel).withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(p.riskLevel.toUpperCase(), style: TextStyle(color: _getRiskColor(p.riskLevel), fontSize: 11, fontWeight: FontWeight.bold)),
+                                      ),
+                                      const SizedBox(width: 8),
+                                    ],
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: statusColor.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(p.status, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(p.description, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87)),
                             const SizedBox(height: 4),
-                            Text('₹${p.estimatedCost}', style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                            Text('₹${p.formattedCost}', style: const TextStyle(fontSize: 14, color: Colors.black54)),
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 const Icon(Icons.location_on, size: 14, color: Colors.grey),
                                 const SizedBox(width: 4),
                                 Expanded(child: Text(p.location, style: const TextStyle(fontSize: 13, color: Colors.grey))),
+                                if (p.nextUpdateDue != null && p.daysUntilUpdate > 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.blue.shade100),
+                                    ),
+                                    child: Text(
+                                      'Valid for ${p.daysUntilUpdate} days',
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.blue.shade700),
+                                    ),
+                                  )
+                                else if (p.nextUpdateDue != null && p.daysUntilUpdate == 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.amber.shade200),
+                                    ),
+                                    child: Text(
+                                      'Due today!',
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber.shade800),
+                                    ),
+                                  )
+                                else if (p.nextUpdateDue != null && p.daysUntilUpdate < 0)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: Colors.red.shade200),
+                                    ),
+                                    child: Text(
+                                      'Overdue by ${p.daysUntilUpdate.abs()} days!',
+                                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red.shade700),
+                                    ),
+                                  ),
                               ],
                             ),
                           ],
@@ -189,5 +268,14 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
         ),
       ],
     );
+  }
+
+  Color _getRiskColor(String level) {
+    switch (level) {
+      case 'Critical': return const Color(0xFFE53935);
+      case 'High': return Colors.orange;
+      case 'Medium': return Colors.amber;
+      default: return const Color(0xFF43A047);
+    }
   }
 }

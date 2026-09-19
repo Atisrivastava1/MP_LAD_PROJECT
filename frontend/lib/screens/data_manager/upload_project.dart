@@ -64,10 +64,11 @@ class _UploadProjectScreenState extends State<UploadProjectScreen> {
     setState(() => _isUploading = true);
     try {
       Map<String, dynamic>? uploadResult;
+      int vDays = int.tryParse(_validityDaysCtrl.text) ?? 30;
       if (kIsWeb && _pickedFileBytes != null) {
-        uploadResult = await ApiService.uploadProjectFileWeb(_pickedFileBytes!, _pickedFileName!);
+        uploadResult = await ApiService.uploadProjectFileWeb(_pickedFileBytes!, _pickedFileName!, vDays);
       } else if (_pickedFilePath != null) {
-        uploadResult = await ApiService.uploadProjectFile(_pickedFilePath!);
+        uploadResult = await ApiService.uploadProjectFile(_pickedFilePath!, vDays);
       }
       if (!mounted) return;
       if (uploadResult != null) {
