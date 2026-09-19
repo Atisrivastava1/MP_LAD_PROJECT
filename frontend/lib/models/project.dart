@@ -11,7 +11,7 @@ class Project {
   final DateTime startDate; // maps to created_at
   final DateTime? endDate; // maps to completion_date
 
-  final int riskScore; // optional from ML prediction
+  final double riskScore; // optional from ML prediction
   final List<String> riskTags; // optional from ML prediction
   final String lastUpdated; // maps to updated_at
   
@@ -51,7 +51,7 @@ class Project {
     double estCost = (json['recommended_amount'] as num?)?.toDouble() ?? (json['estimated_cost'] as num?)?.toDouble() ?? 0.0;
     
     // Fallback logic for nested ML Prediction data if the backend returns it joined
-    int score = json['risk_score'] as int? ?? 0;
+    double score = (json['risk_score'] as num?)?.toDouble() ?? 0.0;
     List<String> tags = [];
     if (json['why_flagged'] != null) {
       tags = List<String>.from(json['why_flagged']);
@@ -91,10 +91,56 @@ class Project {
     );
   }
 
+  // The dynamically calculated penalty score!
+  double get effectiveRiskScore {
+    double finalScore = riskScore;
+    
+    if (daysUntilUpdate < 0) {
+      int daysOverdue = daysUntilUpdate.abs();
+      finalScore += 5 + daysOverdue; // +5 flat penalty, +1 per day
+    }
+    
+    return finalScore > 100.0 ? 100.0 : finalScore;
+  }
+
+  // The dynamically injected warning message!
+  List<String> get effectiveRiskTags {
+    List<String> tags = List.from(riskTags);
+    if (daysUntilUpdate < 0) {
+      tags.add('Update overdue by ${daysUntilUpdate.abs()} days');
+    }
+    return tags;
+  }
+
   String get riskLevel {
-    if (riskScore >= 90) return 'Critical';
-    if (riskScore >= 75) return 'High';
-    if (riskScore >= 50) return 'Medium';
+    if (effectiveRiskScore >= 90) return 'Critical';
+    if (effectiveRiskScore >= 75) return 'High';
+    if (effectiveRiskScore >= 50) return 'Medium';
     return 'Low';
+  }
+
+  int get daysUntilUpdate {
+    if (nextUpdateDue == null) return 0;
+    final now = DateTime.now();
+    return nextUpdateDue!.difference(now).inDays;
+  }
+
+  /// Format amount in Indian numbering system (e.g., 6,00,00,000)
+  String get formattedCost {
+    if (estimatedCost == 0) return '0';
+    int amount = estimatedCost.toInt();
+    String numStr = amount.toString();
+    if (numStr.length <= 3) return numStr;
+    
+    String result = numStr.substring(numStr.length - 3);
+    String remaining = numStr.substring(0, numStr.length - 3);
+    while (remaining.length > 2) {
+      result = '${remaining.substring(remaining.length - 2)},$result';
+      remaining = remaining.substring(0, remaining.length - 2);
+    }
+    if (remaining.isNotEmpty) {
+      result = '$remaining,$result';
+    }
+    return result;
   }
 }

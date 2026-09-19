@@ -46,6 +46,12 @@ class ProjectOut(BaseModel):
     next_update_due: date | None
     created_at: datetime
     updated_at: datetime
+    
+    # ML fields
+    risk_score: float | None = None
+    risk_level: str | None = None
+    why_flagged: list | None = None
+
 
     model_config = {"from_attributes": True}
 

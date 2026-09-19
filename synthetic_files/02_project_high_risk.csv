@@ -1,0 +1,2 @@
+work_id,mp_name,state,constituency,description,recommended_amount,has_images,completion_date,completion_delay_days,completion_date_inconsistent,completion_delay_missing,project_status,update_validity_days
+W-1002,Gautam Gambhir,Delhi,East Delhi,Construction of boundary wall for government school,20000000,False,,210,True,False,IN_PROGRESS,30

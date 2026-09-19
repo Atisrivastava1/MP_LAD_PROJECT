@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
 
 void main() {
-  runApp(const MpladsSentinelApp());
+  runApp(const MpladsSanchalanApp());
 }
 
-class MpladsSentinelApp extends StatelessWidget {
-  const MpladsSentinelApp({super.key});
+class MpladsSanchalanApp extends StatelessWidget {
+  const MpladsSanchalanApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MPLADS Sentinel',
+      title: 'MPLADS Sanchalan',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

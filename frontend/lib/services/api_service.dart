@@ -132,22 +132,22 @@ class ApiService {
   // ---------------- DATA MANAGER / UPLOADS ----------------
 
   static Future<Map<String, dynamic>> fetchDataManagerDashboardStats() async {
-    // We will keep some basic mock aggregation unless you add a stats endpoint.
     final headers = await _getHeaders();
-    final response = await http.get(Uri.parse('$baseUrl/projects'), headers: headers);
+    final response = await http.get(Uri.parse('$baseUrl/dashboard/summary'), headers: headers);
     
     if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
       return {
-        'totalProjects': data.length,
-        'newProjects': data.where((p) => p['project_status'] == 'SUBMITTED').length,
-        'recordsProcessed': data.length * 10, // Mock metric
-        'completedProjects': data.where((p) => p['project_status'] == 'COMPLETED').length,
-        'ongoingProjects': data.where((p) => p['project_status'] == 'IN_PROGRESS').length,
-        'pendingProjects': data.where((p) => p['project_status'] == 'SUBMITTED').length,
-        'highRisk': data.length > 5 ? 5 : data.length, // Placeholder logic
-        'mediumRisk': 0,
-        'lowRisk': 0,
+        'totalProjects': data['total_projects'] ?? 0,
+        'newProjects': data['status_submitted'] ?? 0,
+        'recordsProcessed': data['total_projects'] ?? 0,
+        'completedProjects': data['status_completed'] ?? 0,
+        'ongoingProjects': data['status_in_progress'] ?? 0,
+        'pendingProjects': data['status_submitted'] ?? 0,
+        'criticalRisk': data['critical_count'] ?? 0,
+        'highRisk': data['high_count'] ?? 0,
+        'mediumRisk': data['medium_count'] ?? 0,
+        'lowRisk': data['low_count'] ?? 0,
       };
     }
     return {};
@@ -197,13 +197,16 @@ class ApiService {
     return [];
   }
 
-    static Future<Map<String, dynamic>?> uploadProjectFileWeb(Uint8List bytes, String filename) async {
+    static Future<Map<String, dynamic>?> uploadProjectFileWeb(Uint8List bytes, String filename, [int? validityDays]) async {
     try {
       final token = await getToken();
       final request = http.MultipartRequest('POST', Uri.parse(baseUrl + '/projects/upload'));
       if (token != null) request.headers['Authorization'] = 'Bearer ' + token;
       
       request.files.add(http.MultipartFile.fromBytes('file', bytes, filename: filename));
+      if (validityDays != null) {
+        request.fields['validity_days'] = validityDays.toString();
+      }
       
       final response = await request.send();
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -219,13 +222,16 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>?> uploadProjectFile(String filePath) async {
+  static Future<Map<String, dynamic>?> uploadProjectFile(String filePath, [int? validityDays]) async {
     try {
       final token = await getToken();
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/projects/upload'));
       if (token != null) request.headers['Authorization'] = 'Bearer $token';
       
       request.files.add(await http.MultipartFile.fromPath('file', filePath));
+      if (validityDays != null) {
+        request.fields['validity_days'] = validityDays.toString();
+      }
       
       final response = await request.send();
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -286,13 +292,21 @@ class ApiService {
         return {
           'total_projects': data['total_projects'] ?? 0,
           'investigations': data['investigations_open'] ?? 0,
-          'anomalies_detected': data['high_count'] ?? 0,
+          'anomalies_detected': (data['high_count'] ?? 0) + (data['critical_count'] ?? 0),
+          'total': data['total_projects'] ?? 0,
+          'critical': data['critical_count'] ?? 0,
+          'high': data['high_count'] ?? 0,
+          'medium': data['medium_count'] ?? 0,
+          'normal': data['low_count'] ?? 0,
         };
       }
     } catch (e) {
-      print('fetchDashboardStats error: ');
+      print('fetchDashboardStats error: $e');
     }
-    return {'total_projects': 0, 'investigations': 0, 'anomalies_detected': 0};
+    return {
+      'total_projects': 0, 'investigations': 0, 'anomalies_detected': 0,
+      'total': 0, 'critical': 0, 'high': 0, 'medium': 0, 'normal': 0,
+    };
   }
 
   static Future<List<Project>> fetchProjects({String? searchQuery}) async {

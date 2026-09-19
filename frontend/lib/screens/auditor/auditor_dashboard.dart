@@ -475,12 +475,28 @@ class _AuditorDashboardScreenState extends State<AuditorDashboardScreen> {
           const SizedBox(height: 28),
 
           // Recent Alerts
-          const Text('Recent High-Risk Alerts',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Recent High-Risk Alerts', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              TextButton(
+                onPressed: () => Navigator.of(context).pushNamed('/risk-projects'),
+                child: const Text('View All'),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
-          const _RecentAlertTile(workId: '175556', mpName: 'Shri Rajesh Gupta', riskScore: 91.7, riskLevel: 'Critical', reasons: 'Cost Anomaly, Delay, Duplicate'),
-          const _RecentAlertTile(workId: '177320', mpName: 'Shri Mohan Das', riskScore: 84.0, riskLevel: 'High', reasons: 'Missing Completion Date'),
-          const _RecentAlertTile(workId: '172001', mpName: 'Smt. Kavita Sharma', riskScore: 78.0, riskLevel: 'High', reasons: 'Duplicate Detected'),
+          ...alerts.map((a) => _RecentAlertTile(
+            workId: a['work_id'] ?? '',
+            mpName: a['mp_name'] ?? 'Unknown',
+            riskScore: (a['risk_score'] as num?)?.toDouble() ?? 0.0,
+            riskLevel: a['risk_level'] ?? 'High',
+            reasons: () {
+              final val = a['why_flagged'] ?? a['risk_reasons'];
+              if (val is List) return val.join(', ');
+              return val?.toString() ?? 'Anomaly detected';
+            }(),
+          )),
 
         ],
       ),

@@ -1,6 +1,6 @@
 ﻿"""routes/project_routes.py"""
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile, Form
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
@@ -68,11 +68,12 @@ def update_project(
 )
 async def upload_csv(
     file: UploadFile = File(..., description="CSV file containing project data"),
+    validity_days: int | None = Form(None, description="Update validity days"),
     db: Session = Depends(get_db),
     current_user: User = Depends(data_manager_only),
 ):
     content = await file.read()
-    return process_csv_upload(db, content, user_id=current_user.user_id)
+    return process_csv_upload(db, content, user_id=current_user.user_id, validity_days=validity_days)
 
 
 @router.get("", response_model=list[ProjectOut], summary="List all projects")
