@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../services/api_service.dart';
+import '../../widgets/app_shell.dart';
 
 class DataManagerDashboardScreen extends StatefulWidget {
   const DataManagerDashboardScreen({super.key});
@@ -26,9 +27,17 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F7FE),
-      body: FutureBuilder<Map<String, dynamic>>(
+    return AppShell(
+      title: 'Data Manager Dashboard',
+      selectedIndex: 0,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _refreshData,
+        backgroundColor: const Color(0xFF4318FF),
+        child: const Icon(Icons.refresh, color: Colors.white),
+      ),
+      body: Container(
+        color: const Color(0xFFF4F7FE),
+        child: FutureBuilder<Map<String, dynamic>>(
         future: _dashboardStatsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -64,10 +73,6 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _refreshData,
-        backgroundColor: const Color(0xFF4318FF),
-        child: const Icon(Icons.refresh, color: Colors.white),
       ),
     );
   }
