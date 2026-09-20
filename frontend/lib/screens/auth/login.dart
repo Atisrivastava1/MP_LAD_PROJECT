@@ -108,38 +108,32 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Ashoka Emblem
-                Image.asset('assets/images/emblem.png', height: 140),
-                const SizedBox(height: 32),
+              children: [const SizedBox(height: 32),
                 // App Logo + Name row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.asset('assets/images/logo.png',
-                          height: 64, width: 64, fit: BoxFit.cover),
+                          height: 120, width: 120, fit: BoxFit.cover),
                     ),
-                    const SizedBox(width: 16),
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'MPLADS SANCHALAN',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'AI-Based Fraud & Anomaly Detection',
-                          style: TextStyle(color: Colors.white70, fontSize: 14),
-                        ),
-                      ],
+                    const SizedBox(height: 24),
+                    const Text(
+                      'MPLADS SANCHALAN',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'AI-Based Fraud & Anomaly Detection',
+                      style: TextStyle(color: Colors.white70, fontSize: 14),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -245,39 +239,30 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             const SizedBox(height: 48),
-            // Ashoka Emblem
-            Image.asset('assets/images/emblem.png', height: 80),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset('assets/images/logo.png',
+                  height: 100, width: 100, fit: BoxFit.cover),
+            ),
             const SizedBox(height: 24),
-            // App Logo + Name row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset('assets/images/logo.png',
-                      height: 56, width: 56, fit: BoxFit.cover),
-                ),
-                const SizedBox(width: 14),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'MPLADS SANCHALAN',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'AI-Based Fraud & Anomaly Detection',
-                      style: TextStyle(color: Colors.white70, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ],
+            const Text(
+              'MPLADS SANCHALAN',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'AI-Based Fraud & Anomaly Detection',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+              ),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 36),
             _buildUsernameField(isDark: true),
@@ -382,7 +367,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _buildForgotPasswordField({required bool isDark}) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const SizedBox(height: 4),
         TextFormField(

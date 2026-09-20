@@ -176,41 +176,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildLogo({bool isMobile = false}) {
     return Column(
       children: [
-        Image.asset('assets/images/emblem.png', height: isMobile ? 80 : 140),
         SizedBox(height: isMobile ? 24 : 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(20),
               child: Image.asset('assets/images/logo.png',
-                  height: isMobile ? 56 : 64, width: isMobile ? 56 : 64, fit: BoxFit.cover),
+                  height: isMobile ? 100 : 140, width: isMobile ? 100 : 140, fit: BoxFit.cover),
             ),
-            SizedBox(width: isMobile ? 14 : 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'MPLADS SANCHALAN',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isMobile ? 22 : 28,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                Text(
-                  'Create your account',
-                  style: TextStyle(color: Colors.white70, fontSize: isMobile ? 12 : 14),
-                ),
-              ],
+            SizedBox(height: isMobile ? 16 : 24),
+            Text(
+              'MPLADS SANCHALAN',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: isMobile ? 22 : 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.2,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Create your account',
+              style: TextStyle(color: Colors.white70, fontSize: isMobile ? 12 : 14),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
       ],
     );
   }
-
   Widget _buildForm({required bool isDark}) {
     return Form(
       key: _formKey,
