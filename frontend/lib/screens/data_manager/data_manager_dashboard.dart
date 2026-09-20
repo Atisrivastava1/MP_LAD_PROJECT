@@ -454,8 +454,6 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
         children: [
           const Row(
             children: [
-              Icon(Icons.auto_awesome, color: Color(0xFF4318FF)),
-              SizedBox(width: 8),
               Text(
                 'ML Risk Distribution',
                 style: TextStyle(

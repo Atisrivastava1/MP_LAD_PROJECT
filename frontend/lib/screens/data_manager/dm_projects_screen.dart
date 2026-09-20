@@ -123,9 +123,16 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  itemCount: _projects.length,
+              : _projects.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No projects found.',
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      itemCount: _projects.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final p = _projects[index];
