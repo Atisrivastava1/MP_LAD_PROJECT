@@ -9,6 +9,7 @@ from fastapi import HTTPException
 import pandas as pd
 
 from models.project import Project, ProjectHistory
+from models.user import User
 from schemas.project import ProjectCreate, ProjectUpdate, CSVRowResult, CSVUploadResult
 from services.prediction_service import run_and_store_prediction
 from services.audit_service import log_action
