@@ -1,6 +1,6 @@
 {
-    "name": "mplads_app",
-    "short_name": "mplads_app",
+    "name": "MPLADS Sanchalan",
+    "short_name": "MPLADS Sanchalan",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

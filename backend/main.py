@@ -25,6 +25,7 @@ from routes.evidence_routes import router as evidence_router
 from routes.review_routes import router as review_router
 from routes.audit_routes import router as audit_router
 from routes.dashboard_routes import router as dashboard_router
+from routes.report_routes import router as report_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -95,6 +96,7 @@ app.include_router(evidence_router,      prefix=PREFIX)
 app.include_router(review_router,        prefix=PREFIX)
 app.include_router(audit_router,         prefix=PREFIX)
 app.include_router(dashboard_router,     prefix=PREFIX)
+app.include_router(report_router,        prefix=PREFIX)
 
 
 @app.get("/", tags=["Health"], summary="Health check")

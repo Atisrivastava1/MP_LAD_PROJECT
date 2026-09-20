@@ -19,7 +19,7 @@ class AuditLog {
 
   factory AuditLog.fromJson(Map<String, dynamic> json) {
     return AuditLog(
-      id: json['log_id'] as String,
+      id: json['id'] as String,
       who: json['user_id'] as String? ?? 'Unknown',
       action: json['action'] as String,
       projectId: json['project_id'] as String? ?? '',

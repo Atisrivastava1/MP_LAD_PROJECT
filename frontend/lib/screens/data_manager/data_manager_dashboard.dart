@@ -143,25 +143,38 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
         children: [
           _buildHeader(isMobile: true),
           const SizedBox(height: 24),
-          _buildGradientStatCard(
-            title: 'Total Uploads',
-            value: '${stats['totalProjects']}',
-            icon: Icons.cloud_upload_rounded,
-            gradient: const LinearGradient(colors: [Color(0xFF4318FF), Color(0xFF868CFF)]),
-          ),
-          const SizedBox(height: 16),
-          _buildGradientStatCard(
-            title: 'Pending Review',
-            value: '${stats['pendingProjects']}',
-            icon: Icons.pending_actions_rounded,
-            gradient: const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]),
-          ),
-          const SizedBox(height: 16),
-          _buildGradientStatCard(
-            title: 'Completed Audits',
-            value: '${stats['completedProjects']}',
-            icon: Icons.verified_rounded,
-            gradient: const LinearGradient(colors: [Color(0xFF00B09B), Color(0xFF96C93D)]),
+          Row(
+            children: [
+              Expanded(
+                child: _buildGradientStatCard(
+                  title: 'Uploads',
+                  value: '${stats['totalProjects']}',
+                  icon: Icons.cloud_upload_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFF4318FF), Color(0xFF868CFF)]),
+                  isMobile: true,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildGradientStatCard(
+                  title: 'Pending',
+                  value: '${stats['pendingProjects']}',
+                  icon: Icons.pending_actions_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFFFF9800), Color(0xFFFFC107)]),
+                  isMobile: true,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _buildGradientStatCard(
+                  title: 'Audited',
+                  value: '${stats['completedProjects']}',
+                  icon: Icons.verified_rounded,
+                  gradient: const LinearGradient(colors: [Color(0xFF00B09B), Color(0xFF96C93D)]),
+                  isMobile: true,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           _buildModernDataOverview(stats),
@@ -204,12 +217,13 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
     required String value,
     required IconData icon,
     required Gradient gradient,
+    bool isMobile = false,
   }) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isMobile ? 12 : 24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 12 : 20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -218,50 +232,92 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: gradient,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: gradient.colors.first.withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: isMobile
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFFA3AED0),
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
+                  child: Icon(icon, color: Colors.white, size: 20),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
                 Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 28,
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF2B3674),
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFFA3AED0),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: gradient,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: gradient.colors.first.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Icon(icon, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFFA3AED0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2B3674),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -300,17 +356,21 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
             ),
           ),
           const SizedBox(height: 32),
-          Row(
+          Wrap(
+            spacing: 32,
+            runSpacing: 32,
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               SizedBox(
-                height: 180,
-                width: 180,
+                height: 160,
+                width: 160,
                 child: Stack(
                   children: [
                     PieChart(
                       PieChartData(
                         sectionsSpace: 4,
-                        centerSpaceRadius: 65,
+                        centerSpaceRadius: 55,
                         startDegreeOffset: -90,
                         sections: [
                           PieChartSectionData(
@@ -348,7 +408,7 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
                           Text(
                             '${completePct.toInt()}%',
                             style: const TextStyle(
-                              fontSize: 32,
+                              fontSize: 28,
                               fontWeight: FontWeight.w800,
                               color: Color(0xFF2B3674),
                               height: 1.0,
@@ -367,8 +427,8 @@ class _DataManagerDashboardScreenState extends State<DataManagerDashboardScreen>
                   ],
                 ),
               ),
-              const SizedBox(width: 40),
-              Expanded(
+              Container(
+                constraints: const BoxConstraints(minWidth: 200, maxWidth: 300),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,

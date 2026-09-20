@@ -1,2 +1,2 @@
 work_id,mp_name,state,constituency,description,recommended_amount,has_images,completion_date,completion_delay_days,completion_date_inconsistent,completion_delay_missing,project_status,update_validity_days
-W-1004,Tejasvi Surya,Karnataka,Bangalore South,Installation of 50 solar street lights in the main market area and connecting roads,5000000,True,2023-11-01,0,False,False,COMPLETED,30
+W-1004,Shashi Tharoor,Kerala,Thiruvananthapuram,Construction of a community hall with proper sanitation facilities and drinking water.,1500000,True,2024-01-10,120,False,False,COMPLETED,30

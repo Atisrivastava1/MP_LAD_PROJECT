@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:typed_data';
 import '../models/project.dart';
 import '../models/investigation.dart';
@@ -154,19 +155,25 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> fetchDataQuality() async {
-    return {
-      'qualityScore': 98.0,
-      'checksPassed': 5,
-      'totalChecks': 5,
-      'criticalIssues': 0,
-      'checks': [
-        {'name': 'Required Fields Complete', 'passed': true},
-        {'name': 'Amount Values Valid', 'passed': true},
-        {'name': 'Dates in Logical Range', 'passed': true},
-        {'name': 'Status Mapping Correct', 'passed': true},
-        {'name': 'No Duplicate IDs', 'passed': true},
-      ]
-    };
+    try {
+      final headers = await _getHeaders();
+      final res = await http.get(Uri.parse('$baseUrl/dashboard/data-quality'), headers: headers);
+
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      } else {
+        throw Exception('Failed to load data quality');
+      }
+    } catch (e) {
+      print('Error fetching data quality: $e');
+      return {
+        'qualityScore': 0.0,
+        'checksPassed': 0,
+        'totalChecks': 5,
+        'criticalIssues': 0,
+        'checks': []
+      };
+    }
   }
 
   static Future<List<Map<String, String>>> fetchUploadHistory() async {
@@ -392,4 +399,13 @@ class ApiService {
     }
   }
 
+
+  static Future<void> downloadReport(String endpoint) async {
+    final url = Uri.parse('$baseUrl$endpoint');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    } else {
+      print('Could not launch $url');
+    }
+  }
 }

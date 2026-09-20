@@ -14,7 +14,7 @@ router = APIRouter(prefix="/audit-logs", tags=["Audit Logs"])
 
 
 class AuditLogOut(BaseModel):
-    log_id: str
+    id: str
     user_id: str | None
     project_id: str | None
     investigation_id: str | None
@@ -53,7 +53,7 @@ def system_notifications(
     logs = db.query(AuditLog).order_by(AuditLog.created_at.desc()).limit(10).all()
     return [
         {
-            "id": log.log_id,
+            "id": log.id,
             "title": "System Alert",
             "message": log.action,
             "time": log.created_at.strftime("%Y-%m-%d %H:%M"),

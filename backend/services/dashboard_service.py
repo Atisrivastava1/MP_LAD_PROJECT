@@ -118,3 +118,87 @@ def get_high_risk_projects(db: Session, current_user: User, limit: int = 50) -> 
             "why_flagged": pred.why_flagged,
         })
     return result
+
+
+def get_data_quality(db: Session, current_user: User) -> dict:
+    from sqlalchemy import func, or_
+    
+    q = db.query(Project)
+    if current_user.role == "DATA_MANAGER":
+        q = q.filter(Project.uploaded_by == current_user.user_id)
+        
+    total_projects = q.count()
+    if total_projects == 0:
+        return {
+            'qualityScore': 0.0,
+            'checksPassed': 0,
+            'totalChecks': 5,
+            'criticalIssues': 0,
+            'checks': [
+                {'name': 'Required Fields Complete', 'passed': False},
+                {'name': 'Amount Values Valid', 'passed': False},
+                {'name': 'Dates in Logical Range', 'passed': False},
+                {'name': 'Status Mapping Correct', 'passed': False},
+                {'name': 'No Duplicate IDs', 'passed': False},
+            ]
+        }
+    
+    # 1. Required Fields Complete
+    missing_fields_count = q.filter(
+        or_(
+            Project.mp_name == None,
+            Project.mp_name == "",
+            Project.state == None,
+            Project.state == "",
+            Project.constituency == None,
+            Project.constituency == ""
+        )
+    ).count()
+    req_fields_passed = missing_fields_count == 0
+    
+    # 2. Amount Values Valid
+    invalid_amounts_count = q.filter(
+        or_(
+            Project.recommended_amount == None,
+            Project.recommended_amount <= 0
+        )
+    ).count()
+    amounts_passed = invalid_amounts_count == 0
+    
+    # 3. Dates in Logical Range
+    invalid_dates_count = q.filter(
+        Project.project_status == "COMPLETED",
+        or_(
+            Project.completion_date == None,
+            Project.completion_date == ""
+        )
+    ).count()
+    dates_passed = invalid_dates_count == 0
+    
+    # 4. Status Mapping Correct
+    valid_statuses = ["COMPLETED", "IN_PROGRESS", "REJECTED", "SUBMITTED"]
+    invalid_status_count = q.filter(~Project.project_status.in_(valid_statuses)).count()
+    status_passed = invalid_status_count == 0
+    
+    # 5. No Duplicate IDs
+    distinct_ids = q.with_entities(func.count(func.distinct(Project.work_id))).scalar()
+    duplicates_passed = (total_projects == distinct_ids)
+    
+    checks_passed = sum([req_fields_passed, amounts_passed, dates_passed, status_passed, duplicates_passed])
+    quality_score = (checks_passed / 5.0) * 100.0
+    
+    critical_issues = missing_fields_count + invalid_amounts_count + invalid_status_count + (total_projects - distinct_ids)
+    
+    return {
+        'qualityScore': quality_score,
+        'checksPassed': checks_passed,
+        'totalChecks': 5,
+        'criticalIssues': critical_issues,
+        'checks': [
+            {'name': 'Required Fields Complete', 'passed': req_fields_passed},
+            {'name': 'Amount Values Valid', 'passed': amounts_passed},
+            {'name': 'Dates in Logical Range', 'passed': dates_passed},
+            {'name': 'Status Mapping Correct', 'passed': status_passed},
+            {'name': 'No Duplicate IDs', 'passed': duplicates_passed},
+        ]
+    }

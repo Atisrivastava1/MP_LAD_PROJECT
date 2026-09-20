@@ -221,7 +221,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   List<BottomNavigationBarItem> _navItemsForRole(String role) {
-    if (role == 'Data Manager') {
+    if (role == 'DATA_MANAGER') {
       return const [
         BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), label: 'Dashboard'),
         BottomNavigationBarItem(icon: Icon(Icons.upload_file_outlined), label: 'Upload'),
@@ -244,7 +244,7 @@ class _AppShellState extends State<AppShell> {
     
     final role = ApiService.currentUser?.role ?? '';
 
-    if (role == 'Data Manager') {
+    if (role == 'DATA_MANAGER') {
       switch (index) {
         case 0:
           Navigator.of(context).pushNamedAndRemoveUntil('/data-manager-dashboard', (r) => false);

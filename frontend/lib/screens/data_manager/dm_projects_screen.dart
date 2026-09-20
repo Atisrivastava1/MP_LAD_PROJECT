@@ -188,9 +188,13 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
                           children: [
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Text('Work ID: ${p.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0B1F3A))),
-                                Row(
+                                Expanded(
+                                  child: Text('Work ID: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0B1F3A))),
+                                ),
+                                Wrap(
+                                  spacing: 8,
                                   children: [
                                     if (p.effectiveRiskScore > 0) ...[
                                       Container(
@@ -201,7 +205,6 @@ class _DmProjectsScreenState extends State<DmProjectsScreen> {
                                         ),
                                         child: Text(p.riskLevel.toUpperCase(), style: TextStyle(color: _getRiskColor(p.riskLevel), fontSize: 11, fontWeight: FontWeight.bold)),
                                       ),
-                                      const SizedBox(width: 8),
                                     ],
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

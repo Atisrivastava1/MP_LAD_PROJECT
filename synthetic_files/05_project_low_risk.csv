@@ -1,2 +1,2 @@
 work_id,mp_name,state,constituency,description,recommended_amount,has_images,completion_date,completion_delay_days,completion_date_inconsistent,completion_delay_missing,project_status,update_validity_days
-W-1005,Supriya Sule,Maharashtra,Baramati,Construction of public library and reading room with modern computer facilities,1500000,True,,-10,False,False,IN_PROGRESS,30
+W-1005,Supriya Sule,Maharashtra,Baramati,Construction of public library and reading room with modern computer facilities,2000000,True,2024-02-20,90,False,False,COMPLETED,30

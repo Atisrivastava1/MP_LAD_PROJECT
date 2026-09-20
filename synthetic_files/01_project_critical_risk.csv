@@ -1,2 +1,2 @@
 work_id,mp_name,state,constituency,description,recommended_amount,has_images,completion_date,completion_delay_days,completion_date_inconsistent,completion_delay_missing,project_status,update_validity_days
-W-1001,Dr. Shashi Tharoor,Kerala,Thiruvananthapuram,Road repair,60000000,False,,450,True,False,SUBMITTED,30
+W-1001,Rahul Gandhi,Kerala,Wayanad,Fix,80000000,False,,,True,True,IN_PROGRESS,30

@@ -45,7 +45,7 @@ class _DataQualityScreenState extends State<DataQualityScreen> {
           : _qualityData == null
               ? const Center(child: Text('Failed to load data quality.'))
               : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 16 : 24),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 800),
@@ -61,7 +61,7 @@ class _DataQualityScreenState extends State<DataQualityScreen> {
                           // Top Section: Gauge & Stats
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.all(32),
+                            padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 20 : 32),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
