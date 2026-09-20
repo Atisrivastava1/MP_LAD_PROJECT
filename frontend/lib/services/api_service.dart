@@ -9,7 +9,7 @@ import '../models/user.dart';
 import '../models/audit_log.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  static const String baseUrl = 'https://mp-lad-project.onrender.com/api/v1';
   static final FlutterSecureStorage _storage = const FlutterSecureStorage();
   
   static User? currentUser;
